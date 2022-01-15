@@ -15,6 +15,7 @@ type GameHandler struct {
 	pcfg   *persistence.Config
 }
 
+//
 func NewGameHandler(logger *log.Logger, pcfg *persistence.Config) *GameHandler {
 	return &GameHandler{
 		logger: logger,
