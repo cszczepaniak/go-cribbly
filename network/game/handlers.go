@@ -6,8 +6,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/cszczepaniak/go-cribbly/data/persistence"
 	"github.com/gorilla/mux"
+
+	"github.com/cszczepaniak/go-cribbly/data/persistence"
 )
 
 type GameHandler struct {
@@ -15,7 +16,6 @@ type GameHandler struct {
 	pcfg   *persistence.Config
 }
 
-//
 func NewGameHandler(logger *log.Logger, pcfg *persistence.Config) *GameHandler {
 	return &GameHandler{
 		logger: logger,
