@@ -1,4 +1,4 @@
-package player
+package model
 
 type Player struct {
 	ID   string `json:"id,omitempty"`

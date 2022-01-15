@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"os"
 
-	gamerepo "github.com/cszczepaniak/go-cribbly/data/game/repository"
-	"github.com/cszczepaniak/go-cribbly/data/persistence"
+	gamerepo "github.com/cszczepaniak/go-cribbly/game/repository"
 	"github.com/cszczepaniak/go-cribbly/network"
+	"github.com/cszczepaniak/go-cribbly/persistence"
 )
 
 func main() {

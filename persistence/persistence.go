@@ -1,6 +1,6 @@
 package persistence
 
-import gamerepo "github.com/cszczepaniak/go-cribbly/data/game/repository"
+import gamerepo "github.com/cszczepaniak/go-cribbly/game/repository"
 
 type Config struct {
 	GameRepository gamerepo.GameRepository

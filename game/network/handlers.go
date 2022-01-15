@@ -1,4 +1,4 @@
-package game
+package network
 
 import (
 	"encoding/json"
@@ -6,9 +6,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/cszczepaniak/go-cribbly/persistence"
 	"github.com/gorilla/mux"
-
-	"github.com/cszczepaniak/go-cribbly/data/persistence"
 )
 
 type GameHandler struct {

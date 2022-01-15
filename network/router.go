@@ -5,8 +5,8 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/cszczepaniak/go-cribbly/data/persistence"
-	"github.com/cszczepaniak/go-cribbly/network/game"
+	game "github.com/cszczepaniak/go-cribbly/game/network"
+	"github.com/cszczepaniak/go-cribbly/persistence"
 )
 
 func SetupRouter(logger *log.Logger, pcfg *persistence.Config) *mux.Router {

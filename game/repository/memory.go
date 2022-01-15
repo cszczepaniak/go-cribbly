@@ -5,25 +5,25 @@ import (
 	"sync"
 
 	"github.com/cszczepaniak/go-cribbly/common/random"
-	"github.com/cszczepaniak/go-cribbly/data/game"
+	"github.com/cszczepaniak/go-cribbly/game/model"
 )
 
 var errGameNotFound = errors.New(`game not found`)
 
 type memoryGameRepository struct {
 	lock  sync.RWMutex
-	games map[string]*game.Game
+	games map[string]*model.Game
 }
 
 func NewMemory() GameRepository {
 	return &memoryGameRepository{
-		games: make(map[string]*game.Game),
+		games: make(map[string]*model.Game),
 	}
 }
 
 func (r *memoryGameRepository) Create(teamA, teamB string) (string, error) {
 	id := random.UUID()
-	g := game.NewGame(id, teamA, teamB)
+	g := model.NewGame(id, teamA, teamB)
 
 	r.writeGame(g)
 	return id, nil
@@ -41,7 +41,7 @@ func (r *memoryGameRepository) Delete(id string) error {
 	return nil
 }
 
-func (r *memoryGameRepository) Get(id string) (*game.Game, error) {
+func (r *memoryGameRepository) Get(id string) (*model.Game, error) {
 	g, ok := r.getGame(id)
 	if !ok {
 		return nil, errGameNotFound
@@ -49,18 +49,18 @@ func (r *memoryGameRepository) Get(id string) (*game.Game, error) {
 	return g, nil
 }
 
-func (r *memoryGameRepository) GetAll() ([]*game.Game, error) {
+func (r *memoryGameRepository) GetAll() ([]*model.Game, error) {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
 
-	games := make([]*game.Game, 0, len(r.games))
+	games := make([]*model.Game, 0, len(r.games))
 	for _, g := range r.games {
 		games = append(games, g)
 	}
 	return games, nil
 }
 
-func (r *memoryGameRepository) Update(g *game.Game) error {
+func (r *memoryGameRepository) Update(g *model.Game) error {
 	r.lock.RLock()
 	_, ok := r.games[g.ID]
 	r.lock.RUnlock()
@@ -73,13 +73,13 @@ func (r *memoryGameRepository) Update(g *game.Game) error {
 	return nil
 }
 
-func (r *memoryGameRepository) writeGame(g *game.Game) {
+func (r *memoryGameRepository) writeGame(g *model.Game) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 	r.games[g.ID] = g
 }
 
-func (r *memoryGameRepository) getGame(id string) (*game.Game, bool) {
+func (r *memoryGameRepository) getGame(id string) (*model.Game, bool) {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
 

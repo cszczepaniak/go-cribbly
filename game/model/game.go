@@ -1,4 +1,4 @@
-package game
+package model
 
 const (
 	WinningScore = 121
