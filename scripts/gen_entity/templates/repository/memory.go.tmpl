@@ -1,0 +1,35 @@
+package repository
+
+import (
+	"errors"
+	"sync"
+
+	"github.com/cszczepaniak/go-cribbly/{{ .EntityNameLower }}/model"
+)
+
+var err{{ .EntityNameUpper }}NotFound = errors.New(`{{ .EntityNameLower }} not found`)
+
+type memory{{ .EntityNameUpper }}Repository struct {
+	lock  sync.RWMutex
+	{{ .EntityNameLower }}s map[string]*model.{{ .EntityNameUpper }}
+}
+
+func NewMemory() {{ .EntityNameUpper }}Repository {
+	return &memory{{ .EntityNameUpper }}Repository{
+		{{ .EntityNameLower }}s: make(map[string]*model.{{ .EntityNameUpper }}),
+	}
+}
+
+func (r *memory{{ .EntityNameUpper }}Repository) write{{ .EntityNameUpper }}({{ .EntityVarName }} *model.{{ .EntityNameUpper }}) {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	r.{{ .EntityNameLower }}[g.ID] = {{ .EntityVarName }}
+}
+
+func (r *memory{{ .EntityNameUpper }}Repository) get{{ .EntityNameUpper }}(id string) (*model.{{ .EntityNameUpper }}, bool) {
+	r.lock.RLock()
+	defer r.lock.RUnlock()
+
+	{{ .EntityVarName }}, ok := r.{{ .EntityNameLower }}[id]
+	return {{ .EntityVarName }}, ok
+}

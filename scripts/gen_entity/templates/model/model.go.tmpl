@@ -1,0 +1,13 @@
+package model
+
+type {{ .EntityNameUpper }} struct {
+	ID string
+
+	// TODO add other fields as necessary
+}
+
+func New{{ .EntityNameUpper }}(id string) *{{ .EntityNameUpper }} {
+	return &{{ .EntityNameUpper }}{
+		ID: id,
+	}
+}
