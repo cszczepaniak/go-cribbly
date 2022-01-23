@@ -1,7 +1,9 @@
 package main
 
 import (
-	"fmt"
+	"go/format"
+	"go/parser"
+	"go/token"
 	"io/fs"
 	"log"
 	"os"
@@ -47,11 +49,9 @@ func main() {
 	err = filepath.Walk(templateDir, func(path string, info fs.FileInfo, _ error) error {
 		if filepath.Ext(path) != `.tmpl` {
 			mirrored := strings.ReplaceAll(path, templateDir, entityRoot)
-			fmt.Println(`path is`, path, `, making`, mirrored)
 			if err := os.Mkdir(mirrored, os.ModePerm); os.IsExist(err) || err == nil {
 				return nil
 			} else {
-				fmt.Println(`error making path`)
 				return err
 			}
 		}
@@ -60,7 +60,6 @@ func main() {
 		// name := strings.TrimSuffix(file, `.go.tmpl`)
 		target := strings.TrimSuffix(strings.ReplaceAll(path, templateDir, entityRoot), `.tmpl`)
 
-		fmt.Println(`creating file`, target)
 		f, err := os.OpenFile(target, os.O_WRONLY|os.O_CREATE, os.ModePerm)
 		if err != nil {
 			return err
@@ -68,6 +67,29 @@ func main() {
 		defer f.Close()
 
 		return tmpl.ExecuteTemplate(f, file, ctx)
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = filepath.Walk(entityRoot, func(path string, info fs.FileInfo, _ error) error {
+		if filepath.Ext(path) != `.go` {
+			return nil
+		}
+
+		fset := token.NewFileSet()
+		fileNode, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
+		if err != nil {
+			return err
+		}
+
+		f, err := os.OpenFile(path, os.O_WRONLY|os.O_TRUNC, os.ModePerm)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+
+		return format.Node(f, fset, fileNode)
 	})
 	if err != nil {
 		log.Fatal(err)

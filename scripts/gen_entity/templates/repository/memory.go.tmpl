@@ -4,6 +4,7 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/cszczepaniak/go-cribbly/common/random"
 	"github.com/cszczepaniak/go-cribbly/{{ .EntityNameLower }}/model"
 )
 
@@ -18,6 +19,58 @@ func NewMemory() {{ .EntityNameUpper }}Repository {
 	return &memory{{ .EntityNameUpper }}Repository{
 		{{ .EntityNameLower }}s: make(map[string]*model.{{ .EntityNameUpper }}),
 	}
+}
+
+func (r *memory{{ .EntityNameUpper }}Repository) Create(/* TODO */) (string, error) {
+	id := random.UUID()
+	{{ .EntityVarName }} := model.New{{ .EntityNameUpper }}(id)
+
+	r.write{{ .EntityNameUpper }}({{ .EntityVarName }})
+	return id, nil
+}
+
+func (r *memory{{ .EntityNameUpper }}Repository) Delete(id string) error {
+	if _, ok := r.get{{ .EntityNameUpper }}(id); !ok {
+		return err{{ .EntityNameUpper }}NotFound
+	}
+
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	delete(r.{{ .EntityNameLower }}s, id)
+
+	return nil
+}
+
+func (r *memory{{ .EntityNameUpper }}Repository) Get(id string) (*model.{{ .EntityNameUpper }}, error) {
+	{{ .EntityVarName }}, ok := r.get{{ .EntityNameUpper }}(id)
+	if !ok {
+		return nil, err{{ .EntityNameUpper }}NotFound
+	}
+	return {{ .EntityVarName }}, nil
+}
+
+func (r *memory{{ .EntityNameUpper }}Repository) GetAll() ([]*model.{{ .EntityNameUpper }}, error) {
+	r.lock.RLock()
+	defer r.lock.RUnlock()
+
+	{{ .EntityNameLower }}s := make([]*model.{{ .EntityNameUpper }}, 0, len(r.{{ .EntityNameLower }}s))
+	for _, {{ .EntityVarName }} := range r.{{ .EntityNameLower }}s {
+		{{ .EntityNameLower }}s = append({{ .EntityNameLower }}s, {{ .EntityVarName }})
+	}
+	return {{ .EntityNameLower }}s, nil
+}
+
+func (r *memory{{ .EntityNameUpper }}Repository) Update({{ .EntityVarName }} *model.{{ .EntityNameUpper }}) error {
+	r.lock.RLock()
+	_, ok := r.{{ .EntityNameLower }}s[{{ .EntityVarName }}.ID]
+	r.lock.RUnlock()
+
+	if !ok {
+		return err{{ .EntityNameUpper }}NotFound
+	}
+
+	r.write{{ .EntityNameUpper }}({{ .EntityVarName }})
+	return nil
 }
 
 func (r *memory{{ .EntityNameUpper }}Repository) write{{ .EntityNameUpper }}({{ .EntityVarName }} *model.{{ .EntityNameUpper }}) {

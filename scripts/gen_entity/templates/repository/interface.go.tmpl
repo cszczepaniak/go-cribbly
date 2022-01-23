@@ -1,5 +1,11 @@
 package repository
 
+import "github.com/cszczepaniak/go-cribbly/{{ .EntityNameLower }}/model"
+
 type {{ .EntityNameUpper }}Repository interface {
-    // TODO fill in necessary methods here
+	Create(/* TODO */) (string, error)
+	Update({{ .EntityVarName }} *model.{{ .EntityNameUpper }}) error
+	Delete(id string) error
+	Get(id string) (*model.{{ .EntityNameUpper }}, error)
+	GetAll() ([]*model. {{ .EntityNameUpper }}, error)
 }
