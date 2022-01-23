@@ -6,8 +6,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/cszczepaniak/go-cribbly/persistence"
 	"github.com/gorilla/mux"
+
+	"github.com/cszczepaniak/go-cribbly/persistence"
 )
 
 type GameHandler struct {
@@ -23,8 +24,7 @@ func NewGameHandler(logger *log.Logger, pcfg *persistence.Config) *GameHandler {
 }
 
 func (gh *GameHandler) RegisterRoutes(r *mux.Router) {
-	gh.logger.Println(`registering game routes...`)
-	gamesRouter := r.Path(`/game`).Subrouter()
+	gamesRouter := r.Path(`/games`).Subrouter()
 	gamesRouter.HandleFunc(``, gh.handleGetAll).Methods(http.MethodGet)
 	gamesRouter.HandleFunc(``, gh.handleCreate).Methods(http.MethodPost)
 }
