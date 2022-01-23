@@ -21,9 +21,9 @@ func NewMemory() PlayerRepository {
 	}
 }
 
-func (r *memoryPlayerRepository) Create( /* TODO */ ) (string, error) {
+func (r *memoryPlayerRepository) Create(name string) (string, error) {
 	id := random.UUID()
-	p := model.NewPlayer(id)
+	p := model.NewPlayer(id, name)
 
 	r.writePlayer(p)
 	return id, nil

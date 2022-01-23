@@ -1,13 +1,13 @@
 package model
 
 type Player struct {
-	ID string
-
-	// TODO add other fields as necessary
+	ID   string
+	Name string
 }
 
-func NewPlayer(id string) *Player {
+func NewPlayer(id, name string) *Player {
 	return &Player{
-		ID: id,
+		ID:   id,
+		Name: name,
 	}
 }
