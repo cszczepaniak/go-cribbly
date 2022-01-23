@@ -23,13 +23,13 @@ func NewMemory() {{ .EntityNameUpper }}Repository {
 func (r *memory{{ .EntityNameUpper }}Repository) write{{ .EntityNameUpper }}({{ .EntityVarName }} *model.{{ .EntityNameUpper }}) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
-	r.{{ .EntityNameLower }}[g.ID] = {{ .EntityVarName }}
+	r.{{ .EntityNameLower }}s[{{ .EntityVarName }}.ID] = {{ .EntityVarName }}
 }
 
 func (r *memory{{ .EntityNameUpper }}Repository) get{{ .EntityNameUpper }}(id string) (*model.{{ .EntityNameUpper }}, bool) {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
 
-	{{ .EntityVarName }}, ok := r.{{ .EntityNameLower }}[id]
+	{{ .EntityVarName }}, ok := r.{{ .EntityNameLower }}s[id]
 	return {{ .EntityVarName }}, ok
 }
