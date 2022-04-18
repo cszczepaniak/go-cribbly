@@ -2,14 +2,16 @@ package main
 
 import (
 	"github.com/aws/aws-cdk-go/awscdk/v2"
+	"github.com/aws/aws-cdk-go/awscdk/v2/awss3"
 	"github.com/aws/constructs-go/constructs/v10"
+	"github.com/aws/jsii-runtime-go"
 )
 
-type InfrastructureStackProps struct {
+type ApplicationStackProps struct {
 	awscdk.StackProps
 }
 
-func NewInfrastructureStack(scope constructs.Construct, id string, props *InfrastructureStackProps) awscdk.Stack {
+func NewApplicationStack(scope constructs.Construct, id string, props *ApplicationStackProps) awscdk.Stack {
 	var sprops awscdk.StackProps
 	if props != nil {
 		sprops = props.StackProps
@@ -17,11 +19,13 @@ func NewInfrastructureStack(scope constructs.Construct, id string, props *Infras
 	stack := awscdk.NewStack(scope, &id, &sprops)
 
 	// The code that defines your stack goes here
-
-	// example resource
-	// queue := awssqs.NewQueue(stack, jsii.String("InfrastructureQueue"), &awssqs.QueueProps{
-	// 	VisibilityTimeout: awscdk.Duration_Seconds(jsii.Number(300)),
-	// })
+	awss3.NewBucket(scope, jsii.String(`data-bucket`), &awss3.BucketProps{
+		BucketName:       jsii.String(`cribbly-data-bucket`),
+		PublicReadAccess: jsii.Bool(false),
+		Versioned:        jsii.Bool(false),
+	})
+	// apiGateway := awsapigateway.NewRestApi(scope, jsii.String(`apigateway`), &awsapigateway.RestApiProps{})
+	// lambda := awslambda.NewFunction(scope, jsii.String(`lambda`), &awslambda.FunctionProps{})
 
 	return stack
 }
@@ -29,7 +33,7 @@ func NewInfrastructureStack(scope constructs.Construct, id string, props *Infras
 func main() {
 	app := awscdk.NewApp(nil)
 
-	NewInfrastructureStack(app, "InfrastructureStack", &InfrastructureStackProps{
+	NewApplicationStack(app, "CribblyApplicationStack", &ApplicationStackProps{
 		awscdk.StackProps{
 			Env: env(),
 		},
