@@ -19,7 +19,7 @@ func NewApplicationStack(scope constructs.Construct, id string, props *Applicati
 	stack := awscdk.NewStack(scope, &id, &sprops)
 
 	// The code that defines your stack goes here
-	awss3.NewBucket(scope, jsii.String(`data-bucket`), &awss3.BucketProps{
+	awss3.NewBucket(stack, jsii.String(`data-bucket`), &awss3.BucketProps{
 		BucketName:       jsii.String(`cribbly-data-bucket`),
 		PublicReadAccess: jsii.Bool(false),
 		Versioned:        jsii.Bool(false),
