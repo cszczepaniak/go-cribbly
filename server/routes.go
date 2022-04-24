@@ -1,12 +1,13 @@
 package server
 
 import (
-	"fmt"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
-func (s *Server) RegisterRoutes() {
-	s.router.Get(`/ping`, func(w http.ResponseWriter, _ *http.Request) {
-		fmt.Fprint(w, `pong`)
+func (s *server) registerRoutes() {
+	s.eng.GET(`/ping`, func(ctx *gin.Context) {
+		ctx.String(http.StatusOK, `pong`)
 	})
 }

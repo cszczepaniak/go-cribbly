@@ -1,28 +1,31 @@
 package server
 
 import (
-	"log"
 	"net/http"
 
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
+	"github.com/gin-gonic/gin"
+	cors "github.com/rs/cors/wrapper/gin"
 )
 
-type Server struct {
-	router *chi.Mux
-	logger *log.Logger
+type Config struct {
+	IsLambda bool
 }
 
-func NewServer(l *log.Logger) *Server {
-	return &Server{
-		router: chi.NewRouter(),
-		logger: l,
+type server struct {
+	eng *gin.Engine
+}
+
+func NewServer() http.Handler {
+	eng := gin.Default()
+	eng.Use(cors.AllowAll())
+	s := &server{
+		eng: eng,
 	}
+
+	s.registerRoutes()
+	return s
 }
 
-func (s *Server) Serve() error {
-	s.router.Use(middleware.Logger, middleware.RequestID)
-	s.RegisterRoutes()
-
-	return http.ListenAndServe(`:8080`, s.router)
+func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	s.eng.ServeHTTP(w, r)
 }

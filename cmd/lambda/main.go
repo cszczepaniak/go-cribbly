@@ -2,15 +2,15 @@ package main
 
 import (
 	"log"
-	"os"
+
+	"github.com/apex/gateway"
 
 	"github.com/cszczepaniak/go-cribbly/server"
 )
 
 func main() {
-	l := log.New(os.Stdout, ``, log.Flags())
-	s := server.NewServer(l)
-	err := s.Serve()
+	s := server.NewServer()
+	err := gateway.ListenAndServe(`:8080`, s)
 	if err != nil {
 		log.Fatal(err)
 	}

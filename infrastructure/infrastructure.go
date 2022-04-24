@@ -1,70 +1,150 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/aws/aws-cdk-go/awscdk/v2"
+	"github.com/aws/aws-cdk-go/awscdk/v2/awsapigateway"
+	"github.com/aws/aws-cdk-go/awscdk/v2/awslambda"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awss3"
 	"github.com/aws/constructs-go/constructs/v10"
 	"github.com/aws/jsii-runtime-go"
 )
 
-type ApplicationStackProps struct {
-	awscdk.StackProps
+const (
+	BuildHash         = `BUILD_HASH`
+	ApplicationBucket = `CRIBBLY_APP_BUCKET`
+)
+
+func lookup(k string) string {
+	v, ok := os.LookupEnv(k)
+	if !ok {
+		panic(fmt.Sprintf(`environment variable %q not found`, k))
+	}
+	return v
 }
 
+type CDKEnvironment struct {
+	buildHash             string
+	applicationBucketName string
+}
+
+func getCDKEnv() (CDKEnvironment, error) {
+	return CDKEnvironment{
+		buildHash:             lookup(BuildHash),
+		applicationBucketName: lookup(ApplicationBucket),
+	}, nil
+}
+
+type ApplicationStackProps struct {
+	baseProps           awscdk.StackProps
+	infrastructureStack InfrastructureStack
+	env                 CDKEnvironment
+}
+
+// NewApplicationStack configures the stack for the application.
 func NewApplicationStack(scope constructs.Construct, id string, props *ApplicationStackProps) awscdk.Stack {
 	var sprops awscdk.StackProps
 	if props != nil {
-		sprops = props.StackProps
+		sprops = props.baseProps
 	}
 	stack := awscdk.NewStack(scope, &id, &sprops)
+	stack.AddDependency(props.infrastructureStack.baseStack, jsii.String(`application stack depends on the infrastructure stack`))
 
-	// The code that defines your stack goes here
-	awss3.NewBucket(stack, jsii.String(`data-bucket`), &awss3.BucketProps{
+	// Resource: S3 bucket for storing application data
+	dataBucket := awss3.NewBucket(stack, inheritID(id, `data-bucket`), &awss3.BucketProps{
 		BucketName:       jsii.String(`cribbly-data-bucket`),
 		PublicReadAccess: jsii.Bool(false),
 		Versioned:        jsii.Bool(false),
 	})
-	// apiGateway := awsapigateway.NewRestApi(scope, jsii.String(`apigateway`), &awsapigateway.RestApiProps{})
-	// lambda := awslambda.NewFunction(scope, jsii.String(`lambda`), &awslambda.FunctionProps{})
+
+	// Resource: the lambda handler
+	lambda := awslambda.NewFunction(stack, inheritID(id, `lambda`), &awslambda.FunctionProps{
+		Runtime: awslambda.Runtime_GO_1_X(),
+		Handler: jsii.String(`cribbly-backend`),
+		Code:    awslambda.AssetCode_FromBucket(props.infrastructureStack.appBucket, jsii.String(props.env.buildHash+`.zip`), nil),
+		Environment: &map[string]*string{
+			`GIN_MODE`: jsii.String(`release`),
+		},
+	})
+
+	dataBucket.GrantReadWrite(lambda, nil)
+
+	// Resource: the API gateway that dispatches incoming requests to the lambda
+	awsapigateway.NewLambdaRestApi(stack, inheritID(id, `apigateway`), &awsapigateway.LambdaRestApiProps{
+		RestApiName: jsii.String(`cribbly-api`),
+		Handler:     lambda,
+		DeployOptions: &awsapigateway.StageOptions{
+			StageName: jsii.String(`dev`),
+		},
+	})
 
 	return stack
 }
 
+type InfrastructureStackProps struct {
+	baseProps awscdk.StackProps
+	env       CDKEnvironment
+}
+
+type InfrastructureStack struct {
+	baseStack awscdk.Stack
+	appBucket awss3.Bucket
+}
+
+// NewInfrastructureStack configures the stack that is needed to host infrastructure artifacts and resources.
+func NewInfrastructureStack(scope constructs.Construct, id string, props *InfrastructureStackProps) InfrastructureStack {
+	var sprops awscdk.StackProps
+	if props != nil {
+		sprops = props.baseProps
+	}
+	stack := awscdk.NewStack(scope, &id, &sprops)
+
+	lambdaAppBucket := awss3.NewBucket(stack, inheritID(id, `app-bucket`), &awss3.BucketProps{
+		BucketName: jsii.String(props.env.applicationBucketName),
+		Versioned:  jsii.Bool(false),
+	})
+
+	return InfrastructureStack{
+		baseStack: stack,
+		appBucket: lambdaAppBucket,
+	}
+}
+
 func main() {
+	envVars, err := getCDKEnv()
+	if err != nil {
+		panic(err)
+	}
+
 	app := awscdk.NewApp(nil)
 
-	NewApplicationStack(app, "CribblyApplicationStack", &ApplicationStackProps{
-		awscdk.StackProps{
+	infraStack := NewInfrastructureStack(app, `CribblyInfrastructureStack`, &InfrastructureStackProps{
+		baseProps: awscdk.StackProps{
 			Env: env(),
 		},
+		env: envVars,
+	})
+
+	NewApplicationStack(app, `CribblyApplicationStack`, &ApplicationStackProps{
+		baseProps: awscdk.StackProps{
+			Env: env(),
+		},
+		infrastructureStack: infraStack,
+		env:                 envVars,
 	})
 
 	app.Synth(nil)
 }
 
-// env determines the AWS environment (account+region) in which our stack is to
-// be deployed. For more information see: https://docs.aws.amazon.com/cdk/latest/guide/environments.html
 func env() *awscdk.Environment {
-	// If unspecified, this stack will be "environment-agnostic".
-	// Account/Region-dependent features and context lookups will not work, but a
-	// single synthesized template can be deployed anywhere.
-	//---------------------------------------------------------------------------
-	return nil
+	return &awscdk.Environment{
+		Account: jsii.String(`977779885689`),
+		Region:  jsii.String(`us-east-2`),
+	}
+}
 
-	// Uncomment if you know exactly what account and region you want to deploy
-	// the stack to. This is the recommendation for production stacks.
-	//---------------------------------------------------------------------------
-	// return &awscdk.Environment{
-	//  Account: jsii.String("123456789012"),
-	//  Region:  jsii.String("us-east-1"),
-	// }
-
-	// Uncomment to specialize this stack for the AWS Account and Region that are
-	// implied by the current CLI configuration. This is recommended for dev
-	// stacks.
-	//---------------------------------------------------------------------------
-	// return &awscdk.Environment{
-	//  Account: jsii.String(os.Getenv("CDK_DEFAULT_ACCOUNT")),
-	//  Region:  jsii.String(os.Getenv("CDK_DEFAULT_REGION")),
-	// }
+func inheritID(base string, id string) *string {
+	return jsii.String(base + `-` + id)
 }

@@ -1,3 +1,7 @@
 .PHONY: serve
 serve:
-	go run main.go
+	go run cmd/local/main.go
+
+.PHONY: build
+build:
+	./scripts/build-lamda.sh
