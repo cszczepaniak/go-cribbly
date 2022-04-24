@@ -25,3 +25,6 @@ jobs:
 
       - name: Build and Publish Lambda
         run: ./scripts/build-lambda.sh
+
+      - name: Deploy Lambda
+        run: ./scripts/deploy-lambda.sh
