@@ -13,6 +13,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Install Tools
+        run: ./scripts/install-tools.sh
+
       - name: AWS Creds
         uses: aws-actions/configure-aws-credentials@v1
         with:
