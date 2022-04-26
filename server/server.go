@@ -5,6 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	cors "github.com/rs/cors/wrapper/gin"
+
+	"github.com/cszczepaniak/go-cribbly/internal/persistence/s3"
 )
 
 type Config struct {
@@ -12,14 +14,16 @@ type Config struct {
 }
 
 type server struct {
-	eng *gin.Engine
+	eng      *gin.Engine
+	s3Client s3.Client
 }
 
-func NewServer() http.Handler {
+func NewServer(s3Client s3.Client) http.Handler {
 	eng := gin.Default()
 	eng.Use(cors.AllowAll())
 	s := &server{
-		eng: eng,
+		eng:      eng,
+		s3Client: s3Client,
 	}
 
 	s.registerRoutes()
