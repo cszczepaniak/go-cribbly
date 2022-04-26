@@ -65,7 +65,8 @@ func NewApplicationStack(scope constructs.Construct, id string, props *Applicati
 		Handler: jsii.String(`cribbly-backend`),
 		Code:    awslambda.AssetCode_FromBucket(props.infrastructureStack.appBucket, jsii.String(props.env.buildHash+`.zip`), nil),
 		Environment: &map[string]*string{
-			`GIN_MODE`: jsii.String(`release`),
+			`GIN_MODE`:            jsii.String(`release`),
+			`CRIBBLY_DATA_BUCKET`: dataBucket.BucketName(),
 		},
 	})
 
