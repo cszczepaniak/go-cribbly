@@ -12,4 +12,5 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/rs/cors/wrapper/gin v0.0.0-20220223021805-a4a5ce87d5a2
 	github.com/stretchr/testify v1.7.1 // indirect
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 )
