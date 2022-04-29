@@ -14,7 +14,7 @@ func (s *server) registerRoutes() {
 	s.eng.POST(`/testdata/:key`, func(ctx *gin.Context) {
 		k := ctx.Params.ByName(`key`)
 
-		err := s.s3Client.Put(k, ctx.Request.Body)
+		err := s.byteStore.Put(k, ctx.Request.Body)
 		defer ctx.Request.Body.Close()
 		if err != nil {
 			ctx.String(http.StatusInternalServerError, `%v`, err)
@@ -27,7 +27,7 @@ func (s *server) registerRoutes() {
 	s.eng.GET(`/testdata/:key`, func(ctx *gin.Context) {
 		p := ctx.Params.ByName(`key`)
 
-		resp, err := s.s3Client.Get(p)
+		resp, err := s.byteStore.Get(p)
 		if err != nil {
 			ctx.String(http.StatusInternalServerError, `%v`, err)
 			return
@@ -39,7 +39,7 @@ func (s *server) registerRoutes() {
 	s.eng.GET(`/testdata/many/:prefix`, func(ctx *gin.Context) {
 		p := ctx.Params.ByName(`prefix`)
 
-		resp, err := s.s3Client.GetWithPrefix(p)
+		resp, err := s.byteStore.GetWithPrefix(p)
 		if err != nil {
 			ctx.String(http.StatusInternalServerError, `%v`, err)
 			return

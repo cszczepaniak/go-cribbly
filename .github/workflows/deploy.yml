@@ -24,7 +24,11 @@ jobs:
           aws-region: us-east-2
 
       - name: Build and Publish Lambda
-        run: ./scripts/build-lambda.sh
+        run: 
+          - ./scripts/pre-build.sh
+          - ./scripts/build-lambda.sh
+          - ./scripts/publish-lambda.sh
 
       - name: Deploy Lambda
         run: ./scripts/deploy-lambda.sh
+  

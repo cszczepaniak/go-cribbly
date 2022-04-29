@@ -1,7 +1,7 @@
-package s3
+package bytestore
 
 import (
-	"errors"
+	"context"
 	"io"
 	"runtime"
 	"sync"
@@ -12,9 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"golang.org/x/sync/errgroup"
 )
 
-type rawS3Client interface {
+type s3Client interface {
 	ListKeys(prefix string) ([]string, error)
 	Download(w io.WriterAt, key string) error
 	Upload(key string, body io.Reader) error
@@ -61,17 +62,18 @@ func (c *rawClient) Upload(key string, body io.Reader) error {
 	return err
 }
 
-type Client interface {
+type ByteStore interface {
 	Get(key string) ([]byte, error)
 	GetWithPrefix(pref string) (map[string][]byte, error)
 	Put(key string, r io.Reader) error
 }
 
-type s3Client struct {
-	rawClient rawS3Client
+type s3ByteStore struct {
+	client  s3Client
+	timeout time.Duration
 }
 
-func NewS3Client(bucket string, s *session.Session) *s3Client {
+func NewS3ByteStore(bucket string, s *session.Session, timeout time.Duration) *s3ByteStore {
 	ul := s3manager.NewUploader(s)
 	dl := s3manager.NewDownloader(s)
 	rawClient := &rawClient{
@@ -80,18 +82,19 @@ func NewS3Client(bucket string, s *session.Session) *s3Client {
 		ul:     ul,
 		api:    ul.S3,
 	}
-	return newS3Client(rawClient)
+	return newS3Client(rawClient, timeout)
 }
 
-func newS3Client(c rawS3Client) *s3Client {
-	return &s3Client{
-		rawClient: c,
+func newS3Client(c s3Client, timeout time.Duration) *s3ByteStore {
+	return &s3ByteStore{
+		client:  c,
+		timeout: timeout,
 	}
 }
 
-func (c *s3Client) Get(key string) ([]byte, error) {
+func (c *s3ByteStore) Get(key string) ([]byte, error) {
 	buff := aws.NewWriteAtBuffer(nil)
-	err := c.rawClient.Download(buff, key)
+	err := c.client.Download(buff, key)
 	if err != nil {
 		return nil, err
 	}
@@ -99,10 +102,14 @@ func (c *s3Client) Get(key string) ([]byte, error) {
 	return buff.Bytes(), nil
 }
 
-func (c *s3Client) GetWithPrefix(pref string) (map[string][]byte, error) {
-	keys, err := c.rawClient.ListKeys(pref)
+func (c *s3ByteStore) GetWithPrefix(pref string) (map[string][]byte, error) {
+	keys, err := c.client.ListKeys(pref)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(keys) == 0 {
+		return nil, nil
 	}
 
 	n := runtime.NumCPU()
@@ -113,72 +120,55 @@ func (c *s3Client) GetWithPrefix(pref string) (map[string][]byte, error) {
 	batchSize := (len(keys) + n - 1) / n
 	res := make(map[string][]byte, len(keys))
 	lock := sync.Mutex{}
-	cancel := make(chan struct{})
 
-	wg := sync.WaitGroup{}
-	errs := make(chan error)
+	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
+	defer cancel()
+
+	g, ctx := errgroup.WithContext(ctx)
+
 	for start, end := 0, batchSize; start < len(keys); start, end = end, end+batchSize {
-		wg.Add(1)
-		pd := &parallelDownloader{
-			client: c.rawClient,
-			cancel: make(<-chan struct{}),
-			errs:   errs,
-		}
 		if end > len(keys) {
 			end = len(keys)
 		}
-		go pd.doDownload(&wg, keys[start:end], func(k string, bs []byte) {
-			lock.Lock()
-			defer lock.Unlock()
-			res[k] = bs
+		ks := keys[start:end]
+		g.Go(func() error {
+			var buff []byte
+			for _, k := range ks {
+				select {
+				case <-ctx.Done():
+					return nil
+				default:
+				}
+
+				w := aws.NewWriteAtBuffer(buff)
+				err := c.client.Download(w, k)
+				if err != nil {
+					return err
+				}
+
+				lock.Lock()
+				res[k] = w.Bytes()
+				lock.Unlock()
+
+				buff = buff[:]
+			}
+			return nil
 		})
 	}
 
-	done := make(chan struct{})
-	go func() {
-		wg.Wait()
-		close(done)
-	}()
-
-	select {
-	case err := <-errs:
-		close(cancel)
+	err = g.Wait()
+	if err != nil {
 		return nil, err
-	case <-done:
-		return res, nil
-	case <-time.After(time.Minute):
-		close(cancel)
-		return nil, errors.New(`request timed out`)
 	}
-}
 
-type parallelDownloader struct {
-	client rawS3Client
-	cancel <-chan struct{}
-	errs   chan<- error
-}
-
-func (d *parallelDownloader) doDownload(wg *sync.WaitGroup, keys []string, onComplete func(k string, bs []byte)) {
-	defer wg.Done()
-	var buff []byte
-	for _, k := range keys {
-		select {
-		case <-d.cancel:
-			return
-		default:
-		}
-
-		w := aws.NewWriteAtBuffer(buff)
-		err := d.client.Download(w, k)
-		if err != nil {
-			d.errs <- err
-			return
-		}
-		onComplete(k, w.Bytes())
-		buff = buff[:]
+	err = ctx.Err()
+	if err == context.DeadlineExceeded {
+		return nil, err
 	}
+
+	return res, nil
 }
 
-func (c *s3Client) Put(key string, r io.Reader) error {
-	return c.rawClient.Upload(key, r)
+func (c *s3ByteStore) Put(key string, r io.Reader) error {
+	return c.client.Upload(key, r)
 }

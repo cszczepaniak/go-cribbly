@@ -1,7 +1,8 @@
-package s3
+package bytestore
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -25,7 +27,13 @@ func randomReader(t *testing.T) ([]byte, io.Reader) {
 
 func TestGetWithPrefix(t *testing.T) {
 	rawClient := newMemoryRawClient()
-	client := newS3Client(rawClient)
+	client := newS3Client(rawClient, time.Second)
+
+	t.Run(`zero keys`, func(t *testing.T) {
+		res, err := client.GetWithPrefix(`a`)
+		require.NoError(t, err)
+		assert.Empty(t, res)
+	})
 
 	t.Run(`a few`, func(t *testing.T) {
 		t.Cleanup(rawClient.clear)
@@ -80,34 +88,57 @@ func TestGetWithPrefix(t *testing.T) {
 		assert.Equal(t, errors.New(`configured error`), err)
 		assert.Empty(t, res)
 	})
+
+	t.Run(`timeout`, func(t *testing.T) {
+		t.Cleanup(rawClient.clear)
+
+		client = newS3Client(rawClient, time.Millisecond)
+
+		for i := 0; i < 5; i++ {
+			_, r := randomReader(t)
+			rawClient.Upload(fmt.Sprintf(`a%d.json`, i), r)
+		}
+
+		rawClient.addDelay(20 * time.Millisecond)
+
+		res, err := client.GetWithPrefix(`a`)
+		assert.Equal(t, context.DeadlineExceeded, err)
+		assert.Empty(t, res)
+	})
 }
 
-type memoryRawClient struct {
+type memoryClient struct {
 	lock       sync.Mutex
 	objects    map[string][]byte
 	errorOnKey string
+	delay      time.Duration
 }
 
-var _ rawS3Client = (*memoryRawClient)(nil)
+var _ s3Client = (*memoryClient)(nil)
 
-func newMemoryRawClient() *memoryRawClient {
-	return &memoryRawClient{
+func newMemoryRawClient() *memoryClient {
+	return &memoryClient{
 		objects: make(map[string][]byte),
 	}
 }
 
-func (c *memoryRawClient) clear() {
+func (c *memoryClient) clear() {
 	c.errorOnKey = ``
+	c.delay = 0
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	c.objects = make(map[string][]byte)
 }
 
-func (c *memoryRawClient) setErrorKey(k string) {
+func (c *memoryClient) setErrorKey(k string) {
 	c.errorOnKey = k
 }
 
-func (c *memoryRawClient) ListKeys(prefix string) ([]string, error) {
+func (c *memoryClient) addDelay(d time.Duration) {
+	c.delay = d
+}
+
+func (c *memoryClient) ListKeys(prefix string) ([]string, error) {
 	var res []string
 
 	c.lock.Lock()
@@ -120,7 +151,8 @@ func (c *memoryRawClient) ListKeys(prefix string) ([]string, error) {
 	return res, nil
 }
 
-func (c *memoryRawClient) Download(w io.WriterAt, key string) error {
+func (c *memoryClient) Download(w io.WriterAt, key string) error {
+	time.Sleep(c.delay)
 	if c.errorOnKey != `` && key == c.errorOnKey {
 		return errors.New(`configured error`)
 	}
@@ -136,7 +168,8 @@ func (c *memoryRawClient) Download(w io.WriterAt, key string) error {
 	return err
 }
 
-func (c *memoryRawClient) Upload(key string, body io.Reader) error {
+func (c *memoryClient) Upload(key string, body io.Reader) error {
+	time.Sleep(c.delay)
 	bs, err := io.ReadAll(body)
 	if err != nil {
 		return err

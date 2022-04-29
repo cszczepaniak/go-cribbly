@@ -5,9 +5,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/cszczepaniak/go-cribbly/internal/awscfg"
-	"github.com/cszczepaniak/go-cribbly/internal/persistence/s3"
+	"github.com/cszczepaniak/go-cribbly/internal/persistence/bytestore"
 	"github.com/cszczepaniak/go-cribbly/server"
 )
 
@@ -20,7 +21,7 @@ func main() {
 	if bucket == `` {
 		log.Fatal(errors.New(`bucket not set`))
 	}
-	s3Client := s3.NewS3Client(bucket, awsSession)
+	s3Client := bytestore.NewS3ByteStore(bucket, awsSession, time.Second)
 	s := server.NewServer(s3Client)
 	err = http.ListenAndServe(`:8080`, s)
 	if err != nil {
