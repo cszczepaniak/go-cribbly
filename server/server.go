@@ -15,10 +15,10 @@ type Config struct {
 
 type server struct {
 	eng      *gin.Engine
-	s3Client s3.Client
+	s3Client s3.ByteStore
 }
 
-func NewServer(s3Client s3.Client) http.Handler {
+func NewServer(s3Client s3.ByteStore) http.Handler {
 	eng := gin.Default()
 	eng.Use(cors.AllowAll())
 	s := &server{

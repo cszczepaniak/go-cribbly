@@ -61,7 +61,7 @@ func (c *rawClient) Upload(key string, body io.Reader) error {
 	return err
 }
 
-type Client interface {
+type ByteStore interface {
 	Get(key string) ([]byte, error)
 	GetWithPrefix(pref string) (map[string][]byte, error)
 	Put(key string, r io.Reader) error
