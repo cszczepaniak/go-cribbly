@@ -25,6 +25,7 @@ jobs:
 
       - name: Build and Publish Lambda
         run: 
+          - ./scripts/pre-build.sh
           - ./scripts/build-lambda.sh
           - ./scripts/publish-lambda.sh
 
