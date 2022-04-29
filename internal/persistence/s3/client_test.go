@@ -88,7 +88,7 @@ type memoryRawClient struct {
 	errorOnKey string
 }
 
-var _ rawS3Client = (*memoryRawClient)(nil)
+var _ s3Client = (*memoryRawClient)(nil)
 
 func newMemoryRawClient() *memoryRawClient {
 	return &memoryRawClient{

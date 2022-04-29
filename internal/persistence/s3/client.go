@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-type rawS3Client interface {
+type s3Client interface {
 	ListKeys(prefix string) ([]string, error)
 	Download(w io.WriterAt, key string) error
 	Upload(key string, body io.Reader) error
@@ -67,11 +67,11 @@ type ByteStore interface {
 	Put(key string, r io.Reader) error
 }
 
-type s3Client struct {
-	rawClient rawS3Client
+type s3ByteStore struct {
+	client s3Client
 }
 
-func NewS3Client(bucket string, s *session.Session) *s3Client {
+func NewS3Client(bucket string, s *session.Session) *s3ByteStore {
 	ul := s3manager.NewUploader(s)
 	dl := s3manager.NewDownloader(s)
 	rawClient := &rawClient{
@@ -83,15 +83,15 @@ func NewS3Client(bucket string, s *session.Session) *s3Client {
 	return newS3Client(rawClient)
 }
 
-func newS3Client(c rawS3Client) *s3Client {
-	return &s3Client{
-		rawClient: c,
+func newS3Client(c s3Client) *s3ByteStore {
+	return &s3ByteStore{
+		client: c,
 	}
 }
 
-func (c *s3Client) Get(key string) ([]byte, error) {
+func (c *s3ByteStore) Get(key string) ([]byte, error) {
 	buff := aws.NewWriteAtBuffer(nil)
-	err := c.rawClient.Download(buff, key)
+	err := c.client.Download(buff, key)
 	if err != nil {
 		return nil, err
 	}
@@ -99,8 +99,8 @@ func (c *s3Client) Get(key string) ([]byte, error) {
 	return buff.Bytes(), nil
 }
 
-func (c *s3Client) GetWithPrefix(pref string) (map[string][]byte, error) {
-	keys, err := c.rawClient.ListKeys(pref)
+func (c *s3ByteStore) GetWithPrefix(pref string) (map[string][]byte, error) {
+	keys, err := c.client.ListKeys(pref)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func (c *s3Client) GetWithPrefix(pref string) (map[string][]byte, error) {
 	for start, end := 0, batchSize; start < len(keys); start, end = end, end+batchSize {
 		wg.Add(1)
 		pd := &parallelDownloader{
-			client: c.rawClient,
+			client: c.client,
 			cancel: make(<-chan struct{}),
 			errs:   errs,
 		}
@@ -153,7 +153,7 @@ func (c *s3Client) GetWithPrefix(pref string) (map[string][]byte, error) {
 }
 
 type parallelDownloader struct {
-	client rawS3Client
+	client s3Client
 	cancel <-chan struct{}
 	errs   chan<- error
 }
@@ -179,6 +179,6 @@ func (d *parallelDownloader) doDownload(wg *sync.WaitGroup, keys []string, onCom
 	}
 }
 
-func (c *s3Client) Put(key string, r io.Reader) error {
-	return c.rawClient.Upload(key, r)
+func (c *s3ByteStore) Put(key string, r io.Reader) error {
+	return c.client.Upload(key, r)
 }
