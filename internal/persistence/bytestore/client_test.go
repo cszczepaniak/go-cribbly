@@ -29,6 +29,12 @@ func TestGetWithPrefix(t *testing.T) {
 	rawClient := newMemoryRawClient()
 	client := newS3Client(rawClient, time.Second)
 
+	t.Run(`zero keys`, func(t *testing.T) {
+		res, err := client.GetWithPrefix(`a`)
+		require.NoError(t, err)
+		assert.Empty(t, res)
+	})
+
 	t.Run(`a few`, func(t *testing.T) {
 		t.Cleanup(rawClient.clear)
 		a1, a1R := randomReader(t)

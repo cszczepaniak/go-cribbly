@@ -108,6 +108,10 @@ func (c *s3ByteStore) GetWithPrefix(pref string) (map[string][]byte, error) {
 		return nil, err
 	}
 
+	if len(keys) == 0 {
+		return nil, nil
+	}
+
 	n := runtime.NumCPU()
 	if n > len(keys) {
 		n = len(keys)
