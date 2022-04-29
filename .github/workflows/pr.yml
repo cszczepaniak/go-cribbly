@@ -10,8 +10,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Build Lambda
-        run: ./scripts/build-lambda.sh
-
       - name: Run Unit Tests
         run: go test -race ./...
+        
+      - name: Build Lambda
+        run: ./scripts/build-lambda.sh
