@@ -73,7 +73,7 @@ type s3ByteStore struct {
 	timeout time.Duration
 }
 
-func NewS3Client(bucket string, s *session.Session, timeout time.Duration) *s3ByteStore {
+func NewS3ByteStore(bucket string, s *session.Session, timeout time.Duration) *s3ByteStore {
 	ul := s3manager.NewUploader(s)
 	dl := s3manager.NewDownloader(s)
 	rawClient := &rawClient{
