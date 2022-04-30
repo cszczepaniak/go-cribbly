@@ -8,6 +8,8 @@ import (
 	"io"
 	"math/rand"
 	"runtime"
+	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -24,7 +26,7 @@ func randomReader(t *testing.T) ([]byte, io.Reader) {
 }
 
 func TestGetWithPrefix(t *testing.T) {
-	rawClient := NewMemoryS3Client()
+	rawClient := newMemoryRawClient()
 	client := newS3Client(rawClient, time.Second)
 
 	t.Run(`zero keys`, func(t *testing.T) {
@@ -34,7 +36,7 @@ func TestGetWithPrefix(t *testing.T) {
 	})
 
 	t.Run(`a few`, func(t *testing.T) {
-		t.Cleanup(rawClient.Clear)
+		t.Cleanup(rawClient.clear)
 		a1, a1R := randomReader(t)
 		rawClient.Upload(`a1.json`, a1R)
 		a2, a2R := randomReader(t)
@@ -56,7 +58,7 @@ func TestGetWithPrefix(t *testing.T) {
 	})
 
 	t.Run(`more than num CPU`, func(t *testing.T) {
-		t.Cleanup(rawClient.Clear)
+		t.Cleanup(rawClient.clear)
 		n := 3*runtime.NumCPU() + 7
 		for i := 0; i < n; i++ {
 			_, r := randomReader(t)
@@ -72,7 +74,7 @@ func TestGetWithPrefix(t *testing.T) {
 	})
 
 	t.Run(`error partway through`, func(t *testing.T) {
-		t.Cleanup(rawClient.Clear)
+		t.Cleanup(rawClient.clear)
 		n := 3*runtime.NumCPU() + 7
 		for i := 0; i < n; i++ {
 			_, r := randomReader(t)
@@ -80,7 +82,7 @@ func TestGetWithPrefix(t *testing.T) {
 		}
 
 		errKey := fmt.Sprintf(`a%d.json`, rand.Int31n(int32(n)))
-		rawClient.SetErrorKey(errKey)
+		rawClient.setErrorKey(errKey)
 
 		res, err := client.GetWithPrefix(`a`)
 		assert.Equal(t, errors.New(`configured error`), err)
@@ -88,7 +90,7 @@ func TestGetWithPrefix(t *testing.T) {
 	})
 
 	t.Run(`timeout`, func(t *testing.T) {
-		t.Cleanup(rawClient.Clear)
+		t.Cleanup(rawClient.clear)
 
 		client = newS3Client(rawClient, time.Millisecond)
 
@@ -97,10 +99,85 @@ func TestGetWithPrefix(t *testing.T) {
 			rawClient.Upload(fmt.Sprintf(`a%d.json`, i), r)
 		}
 
-		rawClient.AddDelay(20 * time.Millisecond)
+		rawClient.addDelay(20 * time.Millisecond)
 
 		res, err := client.GetWithPrefix(`a`)
 		assert.Equal(t, context.DeadlineExceeded, err)
 		assert.Empty(t, res)
 	})
+}
+
+type memoryClient struct {
+	lock       sync.Mutex
+	objects    map[string][]byte
+	errorOnKey string
+	delay      time.Duration
+}
+
+var _ s3Client = (*memoryClient)(nil)
+
+func newMemoryRawClient() *memoryClient {
+	return &memoryClient{
+		objects: make(map[string][]byte),
+	}
+}
+
+func (c *memoryClient) clear() {
+	c.errorOnKey = ``
+	c.delay = 0
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	c.objects = make(map[string][]byte)
+}
+
+func (c *memoryClient) setErrorKey(k string) {
+	c.errorOnKey = k
+}
+
+func (c *memoryClient) addDelay(d time.Duration) {
+	c.delay = d
+}
+
+func (c *memoryClient) ListKeys(prefix string) ([]string, error) {
+	var res []string
+
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	for k := range c.objects {
+		if strings.HasPrefix(k, prefix) {
+			res = append(res, k)
+		}
+	}
+	return res, nil
+}
+
+func (c *memoryClient) Download(w io.WriterAt, key string) error {
+	time.Sleep(c.delay)
+	if c.errorOnKey != `` && key == c.errorOnKey {
+		return errors.New(`configured error`)
+	}
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	v, ok := c.objects[key]
+	if !ok {
+		return errors.New(`not found`)
+	}
+
+	_, err := w.WriteAt(v, 0)
+	return err
+}
+
+func (c *memoryClient) Upload(key string, body io.Reader) error {
+	time.Sleep(c.delay)
+	bs, err := io.ReadAll(body)
+	if err != nil {
+		return err
+	}
+
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	c.objects[key] = bs
+
+	return nil
 }
