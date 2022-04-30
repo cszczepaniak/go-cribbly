@@ -1,10 +1,10 @@
 package model
 
-type GameKind int
+type GameKind string
 
 const (
-	PrelimGame     GameKind = 1
-	TournamentGame GameKind = 2
+	PrelimGame     GameKind = `prelim`
+	TournamentGame GameKind = `tournament`
 )
 
 type Game struct {
