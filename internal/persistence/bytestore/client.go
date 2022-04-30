@@ -3,16 +3,20 @@ package bytestore
 import (
 	"context"
 	"io"
+	"net/http"
 	"runtime"
 	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/cszczepaniak/go-cribbly/internal/cribblyerr"
 )
 
 type s3Client interface {
@@ -95,7 +99,9 @@ func newS3Client(c s3Client, timeout time.Duration) *s3ByteStore {
 func (c *s3ByteStore) Get(key string) ([]byte, error) {
 	buff := aws.NewWriteAtBuffer(nil)
 	err := c.client.Download(buff, key)
-	if err != nil {
+	if terr, ok := err.(awserr.RequestFailure); ok && terr.StatusCode() == http.StatusNotFound {
+		return nil, cribblyerr.ErrNotFound
+	} else if err != nil {
 		return nil, err
 	}
 

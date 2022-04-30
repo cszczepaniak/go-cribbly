@@ -9,7 +9,9 @@ import (
 
 	"github.com/cszczepaniak/go-cribbly/internal/awscfg"
 	"github.com/cszczepaniak/go-cribbly/internal/persistence/bytestore"
+	"github.com/cszczepaniak/go-cribbly/internal/persistence/games"
 	"github.com/cszczepaniak/go-cribbly/server"
+	"github.com/cszczepaniak/go-cribbly/server/handlers"
 )
 
 func main() {
@@ -21,8 +23,10 @@ func main() {
 	if bucket == `` {
 		log.Fatal(errors.New(`bucket not set`))
 	}
-	s3Client := bytestore.NewS3ByteStore(bucket, awsSession, time.Second)
-	s := server.NewServer(s3Client)
+	byteStore := bytestore.NewS3ByteStore(bucket, awsSession, time.Second)
+	gameStore := games.NewS3GameStore(byteStore)
+	handler := handlers.NewRequestHandler(gameStore)
+	s := server.NewServer(handler)
 	err = http.ListenAndServe(`:8080`, s)
 	if err != nil {
 		log.Fatal(err)

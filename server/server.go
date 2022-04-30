@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	cors "github.com/rs/cors/wrapper/gin"
 
-	"github.com/cszczepaniak/go-cribbly/internal/persistence/bytestore"
+	"github.com/cszczepaniak/go-cribbly/server/handlers"
 )
 
 type Config struct {
@@ -14,16 +14,16 @@ type Config struct {
 }
 
 type server struct {
-	eng       *gin.Engine
-	byteStore bytestore.ByteStore
+	eng            *gin.Engine
+	requestHandler handlers.RequestHandler
 }
 
-func NewServer(bytestore bytestore.ByteStore) http.Handler {
+func NewServer(handler handlers.RequestHandler) http.Handler {
 	eng := gin.Default()
 	eng.Use(cors.AllowAll())
 	s := &server{
-		eng:       eng,
-		byteStore: bytestore,
+		eng:            eng,
+		requestHandler: handler,
 	}
 
 	s.registerRoutes()
