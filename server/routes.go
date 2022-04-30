@@ -12,7 +12,7 @@ func (s *server) registerRoutes() {
 	})
 
 	games := s.eng.Group(`/games`)
-	games.GET(`/`, s.requestHandler.HandleGetAllGames)
+	games.GET(``, s.requestHandler.HandleGetAllGames)
 	games.GET(`/:id`, s.requestHandler.HandleGetGame)
-	games.POST(`/`, s.requestHandler.HandleCreateGame)
+	games.POST(``, s.requestHandler.HandleCreateGame)
 }
