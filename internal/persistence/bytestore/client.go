@@ -15,7 +15,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-type s3Client interface {
+type S3Client interface {
 	ListKeys(prefix string) ([]string, error)
 	Download(w io.WriterAt, key string) error
 	Upload(key string, body io.Reader) error
@@ -69,7 +69,7 @@ type ByteStore interface {
 }
 
 type s3ByteStore struct {
-	client  s3Client
+	client  S3Client
 	timeout time.Duration
 }
 
@@ -85,7 +85,7 @@ func NewS3ByteStore(bucket string, s *session.Session, timeout time.Duration) *s
 	return newS3Client(rawClient, timeout)
 }
 
-func newS3Client(c s3Client, timeout time.Duration) *s3ByteStore {
+func newS3Client(c S3Client, timeout time.Duration) *s3ByteStore {
 	return &s3ByteStore{
 		client:  c,
 		timeout: timeout,
