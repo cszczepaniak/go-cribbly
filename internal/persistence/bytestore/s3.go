@@ -66,12 +66,6 @@ func (c *rawClient) Upload(key string, body io.Reader) error {
 	return err
 }
 
-type ByteStore interface {
-	Get(key string) ([]byte, error)
-	GetWithPrefix(pref string) (map[string][]byte, error)
-	Put(key string, r io.Reader) error
-}
-
 type s3ByteStore struct {
 	client  s3Client
 	timeout time.Duration
