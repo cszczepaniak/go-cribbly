@@ -1,6 +1,8 @@
 package bytestore
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"io"
 	"strings"
@@ -31,6 +33,15 @@ func (m *MemoryByteStore) Get(key string) ([]byte, error) {
 	return blob, nil
 }
 
+func (m *MemoryByteStore) GetJSON(key string, v interface{}) error {
+	bs, err := m.Get(key)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(bs, v)
+}
+
 func (m *MemoryByteStore) GetWithPrefix(pref string) (map[string][]byte, error) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
@@ -56,4 +67,12 @@ func (m *MemoryByteStore) Put(key string, r io.Reader) error {
 
 	m.blobs[key] = bs
 	return nil
+}
+
+func (m *MemoryByteStore) PutJSON(key string, v interface{}) error {
+	bs, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	return m.Put(key, bytes.NewReader(bs))
 }

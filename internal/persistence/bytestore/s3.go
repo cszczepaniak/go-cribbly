@@ -1,7 +1,9 @@
 package bytestore
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
 	"runtime"
@@ -102,6 +104,15 @@ func (c *s3ByteStore) Get(key string) ([]byte, error) {
 	return buff.Bytes(), nil
 }
 
+func (c *s3ByteStore) GetJSON(key string, v interface{}) error {
+	bs, err := c.Get(key)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(bs, v)
+}
+
 func (c *s3ByteStore) GetWithPrefix(pref string) (map[string][]byte, error) {
 	keys, err := c.client.ListKeys(pref)
 	if err != nil {
@@ -171,4 +182,13 @@ func (c *s3ByteStore) GetWithPrefix(pref string) (map[string][]byte, error) {
 
 func (c *s3ByteStore) Put(key string, r io.Reader) error {
 	return c.client.Upload(key, r)
+}
+
+func (s *s3ByteStore) PutJSON(key string, v interface{}) error {
+	bs, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	return s.Put(key, bytes.NewReader(bs))
 }
