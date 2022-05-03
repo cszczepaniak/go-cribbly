@@ -24,7 +24,9 @@ import (
 type s3Client interface {
 	ListKeys(prefix string) ([]string, error)
 	Download(w io.WriterAt, key string) error
+	DownloadWithContext(ctx context.Context, w io.WriterAt, key string) error
 	Upload(key string, body io.Reader) error
+	UploadWithContext(ctx context.Context, key string, body io.Reader) error
 }
 
 type rawClient struct {
@@ -58,7 +60,25 @@ func (c *rawClient) Download(w io.WriterAt, key string) error {
 	return err
 }
 
+func (c *rawClient) DownloadWithContext(ctx context.Context, w io.WriterAt, key string) error {
+	_, err := c.dl.DownloadWithContext(ctx, w, &s3.GetObjectInput{
+		Bucket: aws.String(c.bucket),
+		Key:    aws.String(key),
+	})
+	return err
+}
+
 func (c *rawClient) Upload(key string, body io.Reader) error {
+	_, err := c.ul.Upload(&s3manager.UploadInput{
+		Key:         aws.String(key),
+		Bucket:      aws.String(c.bucket),
+		ContentType: aws.String(`application/json`),
+		Body:        body,
+	})
+	return err
+}
+
+func (c *rawClient) UploadWithContext(ctx context.Context, key string, body io.Reader) error {
 	_, err := c.ul.Upload(&s3manager.UploadInput{
 		Key:         aws.String(key),
 		Bucket:      aws.String(c.bucket),
@@ -97,7 +117,10 @@ func newS3Client(c s3Client, timeout time.Duration) *s3ByteStore {
 
 func (c *s3ByteStore) Get(key string) ([]byte, error) {
 	buff := aws.NewWriteAtBuffer(nil)
-	err := c.client.Download(buff, key)
+	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
+	defer cancel()
+
+	err := c.client.DownloadWithContext(ctx, buff, key)
 	if terr, ok := err.(awserr.RequestFailure); ok && terr.StatusCode() == http.StatusNotFound {
 		return nil, cribblyerr.ErrNotFound
 	} else if err != nil {
@@ -184,7 +207,10 @@ func (c *s3ByteStore) GetWithPrefix(pref string) (map[string][]byte, error) {
 }
 
 func (c *s3ByteStore) Put(key string, r io.Reader) error {
-	return c.client.Upload(key, r)
+	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
+	defer cancel()
+
+	return c.client.UploadWithContext(ctx, key, r)
 }
 
 func (s *s3ByteStore) PutJSON(key string, v interface{}) error {
