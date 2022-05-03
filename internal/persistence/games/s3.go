@@ -1,7 +1,6 @@
 package games
 
 import (
-	"bytes"
 	"encoding/json"
 
 	"github.com/cszczepaniak/go-cribbly/internal/model"
@@ -36,12 +35,7 @@ func (s *s3GameStore) Create(teamAID string, teamBID string, kind model.GameKind
 		Kind: kind,
 	}
 
-	bs, err := json.Marshal(g)
-	if err != nil {
-		return model.Game{}, err
-	}
-
-	err = s.byteStore.Put(gameKey(g.ID), bytes.NewReader(bs))
+	err := s.byteStore.PutJSON(gameKey(g.ID), g)
 	if err != nil {
 		return model.Game{}, err
 	}
@@ -51,16 +45,13 @@ func (s *s3GameStore) Create(teamAID string, teamBID string, kind model.GameKind
 
 // Get implements GameStore
 func (s *s3GameStore) Get(id string) (model.Game, error) {
-	bs, err := s.byteStore.Get(gameKey(id))
+	var g model.Game
+
+	err := s.byteStore.GetJSON(gameKey(id), &g)
 	if err != nil {
 		return model.Game{}, err
 	}
 
-	var g model.Game
-	err = json.Unmarshal(bs, &g)
-	if err != nil {
-		return model.Game{}, err
-	}
 	return g, nil
 }
 

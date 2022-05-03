@@ -12,7 +12,7 @@ import (
 
 func (h *RequestHandler) HandleGetGame(ctx *gin.Context) {
 	id := ctx.Param(`id`)
-	g, err := h.gameStore.Get(id)
+	g, err := h.pcfg.GameStore.Get(id)
 	if err == cribblyerr.ErrNotFound {
 		ctx.String(http.StatusNotFound, `game not found`)
 		return
@@ -25,7 +25,7 @@ func (h *RequestHandler) HandleGetGame(ctx *gin.Context) {
 }
 
 func (h *RequestHandler) HandleGetAllGames(ctx *gin.Context) {
-	gs, err := h.gameStore.GetAll()
+	gs, err := h.pcfg.GameStore.GetAll()
 	if err != nil {
 		ctx.String(http.StatusInternalServerError, err.Error())
 		return
@@ -52,7 +52,7 @@ func (h *RequestHandler) HandleCreateGame(ctx *gin.Context) {
 		return
 	}
 
-	g, err = h.gameStore.Create(g.TeamIDs[0], g.TeamIDs[1], g.Kind)
+	g, err = h.pcfg.GameStore.Create(g.TeamIDs[0], g.TeamIDs[1], g.Kind)
 	if err != nil {
 		ctx.String(http.StatusInternalServerError, err.Error())
 		return

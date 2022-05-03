@@ -16,6 +16,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cszczepaniak/go-cribbly/internal/random"
 )
 
 func randomReader(t *testing.T) ([]byte, io.Reader) {
@@ -23,6 +25,38 @@ func randomReader(t *testing.T) ([]byte, io.Reader) {
 	require.NoError(t, err)
 
 	return u[:], bytes.NewReader(u[:])
+}
+
+func TestGetTimeout(t *testing.T) {
+	rawClient := newMemoryRawClient()
+	client := newS3Client(rawClient, time.Millisecond)
+
+	k := random.UUID()
+	_, r := randomReader(t)
+	client.Put(k, r)
+
+	bs, err := client.Get(k)
+	require.NoError(t, err)
+	require.NotEmpty(t, bs)
+
+	rawClient.addDelay(time.Second)
+
+	bs, err = client.Get(k)
+	require.Equal(t, context.DeadlineExceeded, err)
+	require.Empty(t, bs)
+}
+
+func TestPutTimeout(t *testing.T) {
+	rawClient := newMemoryRawClient()
+	client := newS3Client(rawClient, time.Millisecond)
+
+	rawClient.addDelay(time.Second)
+
+	k := random.UUID()
+	_, r := randomReader(t)
+
+	err := client.Put(k, r)
+	require.Equal(t, context.DeadlineExceeded, err)
 }
 
 func TestGetWithPrefix(t *testing.T) {
@@ -168,6 +202,22 @@ func (c *memoryClient) Download(w io.WriterAt, key string) error {
 	return err
 }
 
+func (c *memoryClient) DownloadWithContext(ctx context.Context, w io.WriterAt, key string) error {
+	done := make(chan struct{})
+	var err error
+	go func() {
+		err = c.Download(w, key)
+		close(done)
+	}()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-done:
+		return err
+	}
+}
+
 func (c *memoryClient) Upload(key string, body io.Reader) error {
 	time.Sleep(c.delay)
 	bs, err := io.ReadAll(body)
@@ -180,4 +230,20 @@ func (c *memoryClient) Upload(key string, body io.Reader) error {
 	c.objects[key] = bs
 
 	return nil
+}
+
+func (c *memoryClient) UploadWithContext(ctx context.Context, key string, body io.Reader) error {
+	done := make(chan struct{})
+	var err error
+	go func() {
+		err = c.Upload(key, body)
+		close(done)
+	}()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-done:
+		return err
+	}
 }
