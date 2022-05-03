@@ -22,7 +22,7 @@ func newConfig(byteStore bytestore.ByteStore) *Config {
 	}
 }
 
-func NewS3Config(bucket string, awsSession *session.Session, timeout time.Duration) *Config {
+func NewS3Config(awsSession *session.Session, bucket string, timeout time.Duration) *Config {
 	return newConfig(bytestore.NewS3ByteStore(bucket, awsSession, timeout))
 }
 

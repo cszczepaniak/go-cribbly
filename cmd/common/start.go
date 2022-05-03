@@ -1,10 +1,8 @@
 package common
 
 import (
-	"flag"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/cszczepaniak/go-cribbly/config"
 	"github.com/cszczepaniak/go-cribbly/internal/awscfg"
@@ -14,14 +12,14 @@ import (
 )
 
 func Start(listenAndServeFunc func(string, http.Handler) error) {
-	flag.Parse()
+	config.Init()
 
 	awsSession, err := awscfg.Connect()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	pcfg := persistence.NewS3Config(*config.DataBucket, awsSession, time.Second)
+	pcfg := persistence.NewS3Config(awsSession, *config.DataBucket, *config.ByteStoreTimeout)
 	handler := handlers.NewRequestHandler(pcfg)
 
 	s := server.NewServer(handler)
