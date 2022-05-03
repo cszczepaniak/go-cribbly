@@ -1,7 +1,6 @@
 package teams
 
 import (
-	"bytes"
 	"encoding/json"
 
 	"github.com/cszczepaniak/go-cribbly/internal/model"
@@ -33,12 +32,7 @@ func (s *s3TeamStore) Create(playerA, playerB model.Player) (model.Team, error) 
 		Players: []model.Player{playerA, playerB},
 	}
 
-	bs, err := json.Marshal(t)
-	if err != nil {
-		return model.Team{}, err
-	}
-
-	err = s.byteStore.Put(teamKey(t.ID), bytes.NewReader(bs))
+	err := s.byteStore.PutJSON(teamKey(t.ID), t)
 	if err != nil {
 		return model.Team{}, err
 	}
@@ -47,16 +41,13 @@ func (s *s3TeamStore) Create(playerA, playerB model.Player) (model.Team, error) 
 }
 
 func (s *s3TeamStore) Get(id string) (model.Team, error) {
-	bs, err := s.byteStore.Get(teamKey(id))
+	var t model.Team
+
+	err := s.byteStore.GetJSON(teamKey(id), &t)
 	if err != nil {
 		return model.Team{}, err
 	}
 
-	var t model.Team
-	err = json.Unmarshal(bs, &t)
-	if err != nil {
-		return model.Team{}, err
-	}
 	return t, nil
 }
 
