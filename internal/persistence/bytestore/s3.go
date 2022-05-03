@@ -74,6 +74,9 @@ type s3ByteStore struct {
 }
 
 func NewS3ByteStore(bucket string, s *session.Session, timeout time.Duration) *s3ByteStore {
+	if bucket == `` {
+		panic(`bucket not set`)
+	}
 	ul := s3manager.NewUploader(s)
 	dl := s3manager.NewDownloader(s)
 	rawClient := &rawClient{

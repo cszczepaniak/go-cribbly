@@ -1,13 +1,15 @@
 package handlers
 
-import "github.com/cszczepaniak/go-cribbly/internal/persistence/games"
+import (
+	"github.com/cszczepaniak/go-cribbly/internal/persistence"
+)
 
 type RequestHandler struct {
-	gameStore games.GameStore
+	pcfg *persistence.Config
 }
 
-func NewRequestHandler(gameStore games.GameStore) RequestHandler {
+func NewRequestHandler(pcfg *persistence.Config) RequestHandler {
 	return RequestHandler{
-		gameStore: gameStore,
+		pcfg: pcfg,
 	}
 }
