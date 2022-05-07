@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -34,14 +33,15 @@ type storageGenData struct {
 }
 
 func main() {
-	_, err := getModelTypes()
+	modelTypes, err := getModelTypes()
 	if err != nil {
 		panic(err)
 	}
 
 	var entity string
-	err = survey.AskOne(&survey.Input{
+	err = survey.AskOne(&survey.Select{
 		Message: `Enter the name of the entity for which you want to generate storage`,
+		Options: modelTypes,
 	}, &entity, survey.Required)
 	if err != nil {
 		panic(err)
@@ -124,9 +124,32 @@ func getModelTypes() ([]string, error) {
 				if !ok {
 					continue
 				}
-				fmt.Println(typSpec.Name.Name)
+				structType, ok := typSpec.Type.(*ast.StructType)
+				if !ok {
+					continue
+				}
+
+				if !hasIDField(structType) {
+					continue
+				}
+				res = append(res, typSpec.Name.Name)
 			}
 		}
 	}
 	return res, nil
+}
+
+func hasIDField(s *ast.StructType) bool {
+	for _, fld := range s.Fields.List {
+		fieldTyp, ok := fld.Type.(*ast.Ident)
+		if !ok || fieldTyp.Name != `string` {
+			continue
+		}
+		for _, n := range fld.Names {
+			if n.Name == `ID` {
+				return true
+			}
+		}
+	}
+	return false
 }
