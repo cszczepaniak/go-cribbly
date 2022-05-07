@@ -1,7 +1,13 @@
 package main
 
 import (
+	"errors"
+	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"html/template"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,6 +18,7 @@ import (
 )
 
 const (
+	modelPath     = `internal/model`
 	tmplPath      = `tool/storage/*.go.tmpl`
 	interfaceTmpl = `interface.go.tmpl`
 	s3Tmpl        = `s3.go.tmpl`
@@ -27,8 +34,13 @@ type storageGenData struct {
 }
 
 func main() {
+	_, err := getModelTypes()
+	if err != nil {
+		panic(err)
+	}
+
 	var entity string
-	err := survey.AskOne(&survey.Input{
+	err = survey.AskOne(&survey.Input{
 		Message: `Enter the name of the entity for which you want to generate storage`,
 	}, &entity, survey.Required)
 	if err != nil {
@@ -83,4 +95,38 @@ func main() {
 			panic(err)
 		}
 	}
+}
+
+func getModelTypes() ([]string, error) {
+	fset := token.NewFileSet()
+	pkgs, err := parser.ParseDir(fset, modelPath, func(fi fs.FileInfo) bool { return true }, parser.ParseComments)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(pkgs) != 1 {
+		return nil, errors.New(`only expected to parse one package`)
+	}
+
+	var pkg *ast.Package
+	for _, pkg = range pkgs {
+	}
+
+	var res []string
+	for _, f := range pkg.Files {
+		for _, decl := range f.Decls {
+			genDecl, ok := decl.(*ast.GenDecl)
+			if !ok {
+				continue
+			}
+			for _, spec := range genDecl.Specs {
+				typSpec, ok := spec.(*ast.TypeSpec)
+				if !ok {
+					continue
+				}
+				fmt.Println(typSpec.Name.Name)
+			}
+		}
+	}
+	return res, nil
 }
