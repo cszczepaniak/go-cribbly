@@ -52,7 +52,7 @@ func (h *RequestHandler) HandleCreateTeam(ctx *gin.Context) {
 		return
 	}
 
-	t, err = h.pcfg.TeamStore.Create(t.Players[0], t.Players[1])
+	t, err = h.pcfg.TeamStore.Create(t)
 	if err != nil {
 		ctx.String(http.StatusInternalServerError, err.Error())
 		return

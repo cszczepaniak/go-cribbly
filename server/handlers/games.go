@@ -52,7 +52,11 @@ func (h *RequestHandler) HandleCreateGame(ctx *gin.Context) {
 		return
 	}
 
-	g, err = h.pcfg.GameStore.Create(g.TeamIDs[0], g.TeamIDs[1], g.Kind)
+	if g.Kind != model.PrelimGame && g.Kind != model.TournamentGame {
+		ctx.String(http.StatusBadRequest, `unknown game kind`)
+	}
+
+	g, err = h.pcfg.GameStore.Create(g)
 	if err != nil {
 		ctx.String(http.StatusInternalServerError, err.Error())
 		return
