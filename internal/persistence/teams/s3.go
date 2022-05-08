@@ -26,29 +26,33 @@ func NewS3TeamStore(byteStore bytestore.ByteStore) *s3TeamStore {
 	}
 }
 
-func (s *s3TeamStore) Create(playerA, playerB model.Player) (model.Team, error) {
-	t := model.Team{
+func newTeam(playerA, playerB model.Player) model.Team {
+	return model.Team{
 		ID:      random.UUID(),
 		Players: []model.Player{playerA, playerB},
 	}
+}
 
-	err := s.byteStore.PutJSON(teamKey(t.ID), t)
+func (s *s3TeamStore) Create(playerA, playerB model.Player) (model.Team, error) {
+	e := newTeam(playerA, playerB)
+
+	err := s.byteStore.PutJSON(teamKey(e.ID), e)
 	if err != nil {
 		return model.Team{}, err
 	}
 
-	return t, nil
+	return e, nil
 }
 
 func (s *s3TeamStore) Get(id string) (model.Team, error) {
-	var t model.Team
+	var v model.Team
 
-	err := s.byteStore.GetJSON(teamKey(id), &t)
+	err := s.byteStore.GetJSON(teamKey(id), &v)
 	if err != nil {
 		return model.Team{}, err
 	}
 
-	return t, nil
+	return v, nil
 }
 
 func (s *s3TeamStore) GetAll() ([]model.Team, error) {

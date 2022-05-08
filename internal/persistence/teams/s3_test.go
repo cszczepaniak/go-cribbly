@@ -11,42 +11,41 @@ import (
 	"github.com/cszczepaniak/go-cribbly/internal/random"
 )
 
+func randomPlayer() model.Player {
+	return model.Player{
+		FirstName: random.UUID(),
+		LastName:  random.UUID(),
+	}
+}
+
 func TestTeams(t *testing.T) {
 	byteStore := bytestore.NewMemoryByteStore()
 	teamStore := NewS3TeamStore(byteStore)
 
-	ps := make([]model.Player, 0, 6)
-	for i := 0; i < 6; i++ {
-		ps = append(ps, model.Player{
-			FirstName: random.UUID(),
-			LastName:  random.UUID(),
-		})
-	}
-
-	t1, err := teamStore.Create(ps[0], ps[1])
+	e1, err := teamStore.Create(randomPlayer(), randomPlayer())
 	require.NoError(t, err)
 
-	t2, err := teamStore.Create(ps[2], ps[3])
+	e2, err := teamStore.Create(randomPlayer(), randomPlayer())
 	require.NoError(t, err)
 
-	t3, err := teamStore.Create(ps[4], ps[5])
+	e3, err := teamStore.Create(randomPlayer(), randomPlayer())
 	require.NoError(t, err)
 
-	team, err := teamStore.Get(t1.ID)
+	e, err := teamStore.Get(e1.ID)
 	require.NoError(t, err)
-	assert.Equal(t, t1, team)
+	assert.Equal(t, e1, e)
 
-	team, err = teamStore.Get(t2.ID)
+	e, err = teamStore.Get(e2.ID)
 	require.NoError(t, err)
-	assert.Equal(t, t2, team)
+	assert.Equal(t, e2, e)
 
-	team, err = teamStore.Get(t3.ID)
+	e, err = teamStore.Get(e3.ID)
 	require.NoError(t, err)
-	assert.Equal(t, t3, team)
+	assert.Equal(t, e3, e)
 
-	teams, err := teamStore.GetAll()
+	es, err := teamStore.GetAll()
 	require.NoError(t, err)
-	assert.Contains(t, teams, t1)
-	assert.Contains(t, teams, t2)
-	assert.Contains(t, teams, t3)
+	assert.Contains(t, es, e1)
+	assert.Contains(t, es, e2)
+	assert.Contains(t, es, e3)
 }
