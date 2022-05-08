@@ -9,10 +9,9 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 	"gopkg.in/AlecAivazis/survey.v1"
 )
 
@@ -47,14 +46,13 @@ func main() {
 		panic(err)
 	}
 
-	entity = strings.TrimSpace(strings.ToLower(entity))
-
+	entity = strings.TrimSpace(entity)
 	data := storageGenData{
-		Entity:      cases.Title(language.AmericanEnglish).String(entity),
-		EntityLower: entity,
+		Entity:      entity,
+		EntityLower: untitle(entity),
 	}
 
-	basePath := filepath.Join(outPath, entity+`s`)
+	basePath := filepath.Join(outPath, snake(entity)+`s`)
 	_, err = os.Stat(basePath)
 	switch {
 	case err == nil:
@@ -68,7 +66,7 @@ func main() {
 		panic(err)
 	}
 
-	interfacePath := filepath.Join(basePath, entity+`s.go`)
+	interfacePath := filepath.Join(basePath, snake(entity)+`s.go`)
 	s3Path := filepath.Join(basePath, `s3.go`)
 	s3TestPath := filepath.Join(basePath, `s3_test.go`)
 
@@ -95,6 +93,26 @@ func main() {
 			panic(err)
 		}
 	}
+}
+
+func untitle(s string) string {
+	done := false
+	return strings.Map(func(r rune) rune {
+		if done {
+			return r
+		}
+		done = true
+		return rune(strings.ToLower(string(r))[0])
+	}, s)
+}
+
+var wordBoundaryPattern = regexp.MustCompile(`([A-Z])`)
+
+// snake takes a CamelCase word and transforms it to snake_case
+func snake(s string) string {
+	return wordBoundaryPattern.ReplaceAllStringFunc(untitle(s), func(s string) string {
+		return `_` + strings.ToLower(s)
+	})
 }
 
 func getModelTypes() ([]string, error) {

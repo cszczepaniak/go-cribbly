@@ -12,3 +12,10 @@ type Game struct {
 	TeamIDs []string `json:"teams,omitempty"`
 	Kind    GameKind `json:"kind,omitempty"`
 }
+
+type GameResult struct {
+	ID              string `json:"id,omitempty"`
+	GameID          string `json:"game_id,omitempty"`
+	Winner          string `json:"winner,omitempty"`
+	ScoreDifference int    `json:"score_diff,omitempty"`
+}
