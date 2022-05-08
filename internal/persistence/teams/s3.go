@@ -26,16 +26,8 @@ func NewS3TeamStore(byteStore bytestore.ByteStore) *s3TeamStore {
 	}
 }
 
-func newTeam(playerA, playerB model.Player) model.Team {
-	return model.Team{
-		ID:      random.UUID(),
-		Players: []model.Player{playerA, playerB},
-	}
-}
-
-func (s *s3TeamStore) Create(playerA, playerB model.Player) (model.Team, error) {
-	e := newTeam(playerA, playerB)
-
+func (s *s3TeamStore) Create(e model.Team) (model.Team, error) {
+	e.ID = random.UUID()
 	err := s.byteStore.PutJSON(teamKey(e.ID), e)
 	if err != nil {
 		return model.Team{}, err

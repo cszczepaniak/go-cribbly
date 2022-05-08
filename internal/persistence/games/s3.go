@@ -26,17 +26,8 @@ func NewS3GameStore(byteStore bytestore.ByteStore) *s3GameStore {
 	}
 }
 
-func newGame(teamA, teamB string, kind model.GameKind) model.Game {
-	return model.Game{
-		ID:      random.UUID(),
-		TeamIDs: []string{teamA, teamB},
-		Kind:    kind,
-	}
-}
-
-func (s *s3GameStore) Create(teamA, teamB string, kind model.GameKind) (model.Game, error) {
-	e := newGame(teamA, teamB, kind)
-
+func (s *s3GameStore) Create(e model.Game) (model.Game, error) {
+	e.ID = random.UUID()
 	err := s.byteStore.PutJSON(gameKey(e.ID), e)
 	if err != nil {
 		return model.Game{}, err

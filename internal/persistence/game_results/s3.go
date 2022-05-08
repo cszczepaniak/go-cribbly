@@ -26,18 +26,8 @@ func NewS3GameResultStore(byteStore bytestore.ByteStore) *s3GameResultStore {
 	}
 }
 
-func newGameResult(gameID, winner string, scoreDifference int) model.GameResult {
-	return model.GameResult{
-		ID:              random.UUID(),
-		GameID:          gameID,
-		Winner:          winner,
-		ScoreDifference: scoreDifference,
-	}
-}
-
-func (s *s3GameResultStore) Create(gameID, winner string, scoreDifference int) (model.GameResult, error) {
-	e := newGameResult(gameID, winner, scoreDifference)
-
+func (s *s3GameResultStore) Create(e model.GameResult) (model.GameResult, error) {
+	e.ID = random.UUID()
 	err := s.byteStore.PutJSON(gameResultKey(e.ID), e)
 	if err != nil {
 		return model.GameResult{}, err

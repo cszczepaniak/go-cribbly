@@ -26,16 +26,8 @@ func NewS3{{ .Entity }}Store(byteStore bytestore.ByteStore) *s3{{ .Entity }}Stor
 	}
 }
 
-func new{{ .Entity }}(/* fill in the needed params here */) model.{{ .Entity }} {
-	return model.{{ .Entity }} {
-		ID: random.UUID(),
-		// fill in the rest of the fields
-	}
-}
-
-func (s *s3{{ .Entity }}Store) Create(/* fill in the needed params here */) (model.{{ .Entity }}, error) {
-	e := new{{ .Entity }}(/* fill in the needed params here */)
-
+func (s *s3{{ .Entity }}Store) Create(e model.{{ .Entity }}) (model.{{ .Entity }}, error) {
+	e.ID = random.UUID()
 	err := s.byteStore.PutJSON({{ .EntityLower }}Key(e.ID), e)
 	if err != nil {
 		return model.{{ .Entity }}{}, err

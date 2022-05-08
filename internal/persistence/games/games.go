@@ -5,7 +5,7 @@ import (
 )
 
 type GameStore interface {
-	Create(teamA, teamB string, kind model.GameKind) (model.Game, error)
+	Create(model.Game) (model.Game, error)
 	Get(id string) (model.Game, error)
 	GetAll() ([]model.Game, error)
 }

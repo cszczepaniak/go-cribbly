@@ -15,13 +15,13 @@ func Test{{ .Entity }}s(t *testing.T) {
 	byteStore := bytestore.NewMemoryByteStore()
 	{{ .EntityLower }}Store := NewS3{{ .Entity }}Store(byteStore)
 
-	e1, err := {{ .EntityLower }}Store.Create(/* fill in the needed params here */)
+	e1, err := {{ .EntityLower }}Store.Create(model.{{ .Entity }}{})
 	require.NoError(t, err)
 
-	e2, err := {{ .EntityLower }}Store.Create(/* fill in the needed params here */)
+	e2, err := {{ .EntityLower }}Store.Create(model.{{ .Entity }}{})
 	require.NoError(t, err)
 
-	e3, err := {{ .EntityLower }}Store.Create(/* fill in the needed params here */)
+	e3, err := {{ .EntityLower }}Store.Create(model.{{ .Entity }}{})
 	require.NoError(t, err)
 
 	e, err := {{ .EntityLower }}Store.Get(e1.ID)

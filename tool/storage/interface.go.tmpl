@@ -5,7 +5,7 @@ import (
 )
 
 type {{ .Entity }}Store interface {
-	Create(/* fill in the needed params here */) (model.{{ .Entity }}, error)
+	Create(model.{{ .Entity }}) (model.{{ .Entity }}, error)
 	Get(id string) (model.{{ .Entity }}, error)
 	GetAll() ([]model.{{ .Entity }}, error)
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cszczepaniak/go-cribbly/internal/model"
 	"github.com/cszczepaniak/go-cribbly/internal/persistence/bytestore"
 	"github.com/cszczepaniak/go-cribbly/internal/random"
 )
@@ -14,13 +15,13 @@ func TestGameResults(t *testing.T) {
 	byteStore := bytestore.NewMemoryByteStore()
 	gameResultStore := NewS3GameResultStore(byteStore)
 
-	e1, err := gameResultStore.Create(random.UUID(), random.UUID(), random.Int())
+	e1, err := gameResultStore.Create(model.GameResult{GameID: random.UUID(), Winner: random.UUID(), ScoreDifference: random.Int()})
 	require.NoError(t, err)
 
-	e2, err := gameResultStore.Create(random.UUID(), random.UUID(), random.Int())
+	e2, err := gameResultStore.Create(model.GameResult{GameID: random.UUID(), Winner: random.UUID(), ScoreDifference: random.Int()})
 	require.NoError(t, err)
 
-	e3, err := gameResultStore.Create(random.UUID(), random.UUID(), random.Int())
+	e3, err := gameResultStore.Create(model.GameResult{GameID: random.UUID(), Winner: random.UUID(), ScoreDifference: random.Int()})
 	require.NoError(t, err)
 
 	e, err := gameResultStore.Get(e1.ID)

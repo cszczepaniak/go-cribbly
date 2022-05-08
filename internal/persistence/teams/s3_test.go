@@ -22,13 +22,13 @@ func TestTeams(t *testing.T) {
 	byteStore := bytestore.NewMemoryByteStore()
 	teamStore := NewS3TeamStore(byteStore)
 
-	e1, err := teamStore.Create(randomPlayer(), randomPlayer())
+	e1, err := teamStore.Create(model.Team{Players: []model.Player{randomPlayer(), randomPlayer()}})
 	require.NoError(t, err)
 
-	e2, err := teamStore.Create(randomPlayer(), randomPlayer())
+	e2, err := teamStore.Create(model.Team{Players: []model.Player{randomPlayer(), randomPlayer()}})
 	require.NoError(t, err)
 
-	e3, err := teamStore.Create(randomPlayer(), randomPlayer())
+	e3, err := teamStore.Create(model.Team{Players: []model.Player{randomPlayer(), randomPlayer()}})
 	require.NoError(t, err)
 
 	e, err := teamStore.Get(e1.ID)

@@ -15,13 +15,13 @@ func TestGames(t *testing.T) {
 	byteStore := bytestore.NewMemoryByteStore()
 	gameStore := NewS3GameStore(byteStore)
 
-	e1, err := gameStore.Create(random.UUID(), random.UUID(), model.PrelimGame)
+	e1, err := gameStore.Create(model.Game{TeamIDs: []string{random.UUID(), random.UUID()}, Kind: model.PrelimGame})
 	require.NoError(t, err)
 
-	e2, err := gameStore.Create(random.UUID(), random.UUID(), model.PrelimGame)
+	e2, err := gameStore.Create(model.Game{TeamIDs: []string{random.UUID(), random.UUID()}, Kind: model.PrelimGame})
 	require.NoError(t, err)
 
-	e3, err := gameStore.Create(random.UUID(), random.UUID(), model.PrelimGame)
+	e3, err := gameStore.Create(model.Game{TeamIDs: []string{random.UUID(), random.UUID()}, Kind: model.PrelimGame})
 	require.NoError(t, err)
 
 	e, err := gameStore.Get(e1.ID)

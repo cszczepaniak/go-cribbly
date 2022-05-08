@@ -5,7 +5,7 @@ import (
 )
 
 type TeamStore interface {
-	Create(playerA, playerB model.Player) (model.Team, error)
+	Create(model.Team) (model.Team, error)
 	Get(id string) (model.Team, error)
 	GetAll() ([]model.Team, error)
 }

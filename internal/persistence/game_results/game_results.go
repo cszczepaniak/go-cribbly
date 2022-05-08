@@ -5,7 +5,7 @@ import (
 )
 
 type GameResultStore interface {
-	Create(gameID, winner string, scoreDifference int) (model.GameResult, error)
+	Create(model.GameResult) (model.GameResult, error)
 	Get(id string) (model.GameResult, error)
 	GetAll() ([]model.GameResult, error)
 }
