@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 
 	"gopkg.in/AlecAivazis/survey.v1"
@@ -94,7 +95,12 @@ func main() {
 			continue
 		}
 
-		f, err := os.OpenFile(p, os.O_CREATE, os.ModePerm)
+		flags := os.O_CREATE
+		if overwrite {
+			flags |= os.O_TRUNC
+		}
+
+		f, err := os.OpenFile(p, flags, os.ModePerm)
 		if err != nil {
 			panic(err)
 		}
@@ -176,6 +182,7 @@ func getModelTypes() ([]string, error) {
 			}
 		}
 	}
+	sort.Strings(res)
 	return res, nil
 }
 

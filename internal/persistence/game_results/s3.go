@@ -5,7 +5,6 @@ import (
 
 	"github.com/cszczepaniak/go-cribbly/internal/model"
 	"github.com/cszczepaniak/go-cribbly/internal/persistence/bytestore"
-	"github.com/cszczepaniak/go-cribbly/internal/random"
 )
 
 const gameResultsPrefix = `gameResults/`
@@ -27,7 +26,6 @@ func NewS3GameResultStore(byteStore bytestore.ByteStore) *s3GameResultStore {
 }
 
 func (s *s3GameResultStore) Create(e model.GameResult) (model.GameResult, error) {
-	e.ID = random.UUID()
 	err := s.byteStore.PutJSON(gameResultKey(e.ID), e)
 	if err != nil {
 		return model.GameResult{}, err
