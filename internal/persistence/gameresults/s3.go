@@ -1,4 +1,4 @@
-package gameResults
+package gameresults
 
 import (
 	"encoding/json"

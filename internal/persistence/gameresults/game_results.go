@@ -1,4 +1,4 @@
-package gameResults
+package gameresults
 
 import (
 	"github.com/cszczepaniak/go-cribbly/internal/model"

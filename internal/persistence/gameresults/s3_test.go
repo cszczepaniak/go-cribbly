@@ -1,4 +1,4 @@
-package gameResults
+package gameresults
 
 import (
 	"testing"
@@ -15,13 +15,13 @@ func TestGameResults(t *testing.T) {
 	byteStore := bytestore.NewMemoryByteStore()
 	gameResultStore := NewS3GameResultStore(byteStore)
 
-	e1, err := gameResultStore.Create(model.GameResult{GameID: random.UUID(), Winner: random.UUID(), ScoreDifference: random.Int()})
+	e1, err := gameResultStore.Create(model.GameResult{GameID: random.UUID(), Winner: random.UUID(), LoserScore: random.Int()})
 	require.NoError(t, err)
 
-	e2, err := gameResultStore.Create(model.GameResult{GameID: random.UUID(), Winner: random.UUID(), ScoreDifference: random.Int()})
+	e2, err := gameResultStore.Create(model.GameResult{GameID: random.UUID(), Winner: random.UUID(), LoserScore: random.Int()})
 	require.NoError(t, err)
 
-	e3, err := gameResultStore.Create(model.GameResult{GameID: random.UUID(), Winner: random.UUID(), ScoreDifference: random.Int()})
+	e3, err := gameResultStore.Create(model.GameResult{GameID: random.UUID(), Winner: random.UUID(), LoserScore: random.Int()})
 	require.NoError(t, err)
 
 	e, err := gameResultStore.Get(e1.ID)
