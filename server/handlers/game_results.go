@@ -44,10 +44,12 @@ func (h *RequestHandler) HandleCreateGameResult(ctx *gin.Context) {
 		return
 	}
 
-	if r.GameID == `` {
+	gameID, ok := ctx.Params.Get(`id`)
+	if !ok {
 		ctx.String(http.StatusBadRequest, `must specify associated game`)
 		return
 	}
+	r.GameID = gameID
 
 	if r.Winner == `` {
 		ctx.String(http.StatusBadRequest, `must specify winning team ID`)

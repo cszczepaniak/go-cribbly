@@ -32,10 +32,9 @@ func TestGameResults(t *testing.T) {
 	var gr model.GameResult
 	t.Run(`create`, func(t *testing.T) {
 		r := strings.NewReader(fmt.Sprintf(`{
-			"game_id": %q,
 			"winner": %q,
 			"loser_score": 111
-		}`, g.ID, tm.ID))
+		}`, tm.ID))
 		resp, err := http.DefaultClient.Post(s.URL+`/games/`+g.ID+`/result`, ``, r)
 		require.NoError(t, err)
 		defer resp.Body.Close()
@@ -51,11 +50,10 @@ func TestGameResults(t *testing.T) {
 
 	t.Run(`create for nonexistent game`, func(t *testing.T) {
 		r := strings.NewReader(fmt.Sprintf(`{
-			"game_id": %q,
 			"winner": %q,
 			"loser_score": 111
-		}`, random.UUID(), tm.ID))
-		resp, err := http.DefaultClient.Post(s.URL+`/games/`+g.ID+`/result`, ``, r)
+		}`, tm.ID))
+		resp, err := http.DefaultClient.Post(s.URL+`/games/`+random.UUID()+`/result`, ``, r)
 		require.NoError(t, err)
 		defer resp.Body.Close()
 
@@ -64,10 +62,9 @@ func TestGameResults(t *testing.T) {
 
 	t.Run(`create for nonexistent team`, func(t *testing.T) {
 		r := strings.NewReader(fmt.Sprintf(`{
-			"game_id": %q,
 			"winner": %q,
 			"loser_score": 111
-		}`, g.ID, random.UUID()))
+		}`, random.UUID()))
 		resp, err := http.DefaultClient.Post(s.URL+`/games/`+g.ID+`/result`, ``, r)
 		require.NoError(t, err)
 		defer resp.Body.Close()
