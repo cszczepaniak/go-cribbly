@@ -3,10 +3,11 @@ package bytestore
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"io"
 	"strings"
 	"sync"
+
+	"github.com/cszczepaniak/go-cribbly/internal/cribblyerr"
 )
 
 type MemoryByteStore struct {
@@ -28,7 +29,7 @@ func (m *MemoryByteStore) Get(key string) ([]byte, error) {
 
 	blob, ok := m.blobs[key]
 	if !ok {
-		return nil, errors.New(`not found`)
+		return nil, cribblyerr.ErrNotFound
 	}
 	return blob, nil
 }

@@ -16,6 +16,13 @@ func (s *server) registerRoutes() {
 	games.GET(`/:id`, s.requestHandler.HandleGetGame)
 	games.POST(``, s.requestHandler.HandleCreateGame)
 
+	gameResult := games.Group(`/:id/result`)
+	gameResult.GET(``, s.requestHandler.HandleGetGameResult)
+	gameResult.POST(``, s.requestHandler.HandleCreateGameResult)
+
+	gameResults := games.Group(`/:id/results`)
+	gameResults.GET(``, s.requestHandler.HandleGetAllGameResults)
+
 	teams := s.eng.Group(`/teams`)
 	teams.GET(``, s.requestHandler.HandleGetAllTeams)
 	teams.GET(`/:id`, s.requestHandler.HandleGetTeam)

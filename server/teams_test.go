@@ -14,7 +14,7 @@ import (
 )
 
 func TestTeams(t *testing.T) {
-	s := newTestServer(t)
+	s, _ := newTestServer(t)
 
 	var team model.Team
 	t.Run(`create`, func(t *testing.T) {

@@ -14,7 +14,7 @@ import (
 )
 
 func TestGames(t *testing.T) {
-	s := newTestServer(t)
+	s, _ := newTestServer(t)
 
 	var g model.Game
 	t.Run(`create`, func(t *testing.T) {

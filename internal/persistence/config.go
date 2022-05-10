@@ -12,9 +12,9 @@ import (
 )
 
 type Config struct {
-	GameStore games.GameStore
-	gameresults.GameResultStore
-	TeamStore teams.TeamStore
+	GameStore       games.GameStore
+	GameResultStore gameresults.GameResultStore
+	TeamStore       teams.TeamStore
 }
 
 func newConfig(byteStore bytestore.ByteStore) *Config {

@@ -12,7 +12,7 @@ import (
 	"github.com/cszczepaniak/go-cribbly/server/handlers"
 )
 
-func newTestServer(t *testing.T) *httptest.Server {
+func newTestServer(t *testing.T) (*httptest.Server, *persistence.Config) {
 	pcfg := persistence.NewMemoryConfig()
 	handler := handlers.NewRequestHandler(pcfg)
 	server := NewTestServer(handler)
@@ -20,11 +20,11 @@ func newTestServer(t *testing.T) *httptest.Server {
 	s := httptest.NewServer(server)
 	t.Cleanup(s.Close)
 
-	return s
+	return s, pcfg
 }
 
 func TestPing(t *testing.T) {
-	s := newTestServer(t)
+	s, _ := newTestServer(t)
 
 	resp, err := http.DefaultClient.Get(s.URL + `/ping`)
 	require.NoError(t, err)
