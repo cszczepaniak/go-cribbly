@@ -1,5 +1,16 @@
 package handlers
 
-import "github.com/gin-gonic/gin"
+import (
+	"net/http"
 
-func (h *RequestHandler) HandleGetStandings(ctx *gin.Context) {}
+	"github.com/gin-gonic/gin"
+)
+
+func (h *RequestHandler) HandleGetStandings(ctx *gin.Context) {
+	standings, err := h.standingsService.GetStandings()
+	if err != nil {
+		ctx.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	ctx.JSON(http.StatusOK, standings)
+}

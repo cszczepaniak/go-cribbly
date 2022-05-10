@@ -2,14 +2,17 @@ package handlers
 
 import (
 	"github.com/cszczepaniak/go-cribbly/internal/persistence"
+	"github.com/cszczepaniak/go-cribbly/service/standings"
 )
 
 type RequestHandler struct {
-	pcfg *persistence.Config
+	pcfg             *persistence.Config
+	standingsService *standings.StandingsService
 }
 
-func NewRequestHandler(pcfg *persistence.Config) RequestHandler {
+func NewRequestHandler(pcfg *persistence.Config, standingsService *standings.StandingsService) RequestHandler {
 	return RequestHandler{
-		pcfg: pcfg,
+		pcfg:             pcfg,
+		standingsService: standingsService,
 	}
 }

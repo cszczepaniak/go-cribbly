@@ -3,31 +3,31 @@ package standings
 import (
 	"sort"
 
+	"github.com/cszczepaniak/go-cribbly/internal/model"
 	"github.com/cszczepaniak/go-cribbly/internal/persistence"
 )
-
-type Standing struct {
-	TeamID     string
-	Wins       int
-	Losses     int
-	TotalScore int
-}
 
 type StandingsService struct {
 	pcfg *persistence.Config
 }
 
-func (s *StandingsService) GetStandings() ([]Standing, error) {
+func NewStandingsService(pcfg *persistence.Config) *StandingsService {
+	return &StandingsService{
+		pcfg: pcfg,
+	}
+}
+
+func (s *StandingsService) GetStandings() ([]model.Standing, error) {
 	results, err := s.pcfg.GameResultStore.GetAll()
 	if err != nil {
 		return nil, err
 	}
 
-	standingsMap := make(map[string]Standing)
+	standingsMap := make(map[string]model.Standing)
 	for _, r := range results {
 		winner, ok := standingsMap[r.Winner]
 		if !ok {
-			winner = Standing{
+			winner = model.Standing{
 				TeamID: r.Winner,
 			}
 		}
@@ -37,7 +37,7 @@ func (s *StandingsService) GetStandings() ([]Standing, error) {
 
 		loser, ok := standingsMap[r.Loser]
 		if !ok {
-			loser = Standing{
+			loser = model.Standing{
 				TeamID: r.Loser,
 			}
 		}
@@ -46,7 +46,7 @@ func (s *StandingsService) GetStandings() ([]Standing, error) {
 		standingsMap[r.Loser] = loser
 	}
 
-	res := make([]Standing, 0, len(standingsMap))
+	res := make([]model.Standing, 0, len(standingsMap))
 	for _, s := range standingsMap {
 		res = append(res, s)
 	}

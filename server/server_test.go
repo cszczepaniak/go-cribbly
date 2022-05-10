@@ -10,11 +10,13 @@ import (
 
 	"github.com/cszczepaniak/go-cribbly/internal/persistence"
 	"github.com/cszczepaniak/go-cribbly/server/handlers"
+	"github.com/cszczepaniak/go-cribbly/service/standings"
 )
 
 func newTestServer(t *testing.T) (*httptest.Server, *persistence.Config) {
 	pcfg := persistence.NewMemoryConfig()
-	handler := handlers.NewRequestHandler(pcfg)
+	standingsService := standings.NewStandingsService(pcfg)
+	handler := handlers.NewRequestHandler(pcfg, standingsService)
 	server := NewTestServer(handler)
 
 	s := httptest.NewServer(server)
