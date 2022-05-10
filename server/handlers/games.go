@@ -14,7 +14,7 @@ import (
 func (h *RequestHandler) HandleGetGame(ctx *gin.Context) {
 	id := ctx.Param(`id`)
 	g, err := h.pcfg.GameStore.Get(id)
-	if err == cribblyerr.ErrNotFound {
+	if cribblyerr.IsNotFound(err) {
 		ctx.String(http.StatusNotFound, `game not found`)
 		return
 	} else if err != nil {

@@ -29,7 +29,7 @@ func (m *MemoryByteStore) Get(key string) ([]byte, error) {
 
 	blob, ok := m.blobs[key]
 	if !ok {
-		return nil, cribblyerr.ErrNotFound
+		return nil, cribblyerr.ErrNotFound(key)
 	}
 	return blob, nil
 }

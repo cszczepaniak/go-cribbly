@@ -14,7 +14,7 @@ import (
 func (h *RequestHandler) HandleGetTeam(ctx *gin.Context) {
 	id := ctx.Param(`id`)
 	t, err := h.pcfg.TeamStore.Get(id)
-	if err == cribblyerr.ErrNotFound {
+	if cribblyerr.IsNotFound(err) {
 		ctx.String(http.StatusNotFound, `team not found`)
 		return
 	} else if err != nil {

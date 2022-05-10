@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/cszczepaniak/go-cribbly/internal/cribblyerr"
 	"github.com/cszczepaniak/go-cribbly/internal/model"
@@ -13,7 +15,7 @@ import (
 func (h *RequestHandler) HandleGetGameResult(ctx *gin.Context) {
 	id := ctx.Param(`id`)
 	r, err := h.pcfg.GameResultStore.Get(id)
-	if err == cribblyerr.ErrNotFound {
+	if cribblyerr.IsNotFound(err) {
 		ctx.String(http.StatusNotFound, `game result not found`)
 		return
 	} else if err != nil {
@@ -62,9 +64,19 @@ func (h *RequestHandler) HandleCreateGameResult(ctx *gin.Context) {
 		return
 	}
 
-	_, err = h.pcfg.GameStore.Get(r.GameID)
-	if err == cribblyerr.ErrNotFound {
-		ctx.String(http.StatusBadRequest, `result cannot be made for non-existent game`)
+	eg := errgroup.Group{}
+	eg.Go(func() error {
+		_, err := h.pcfg.GameStore.Get(r.GameID)
+		return err
+	})
+	eg.Go(func() error {
+		_, err := h.pcfg.TeamStore.Get(r.Winner)
+		return err
+	})
+
+	err = eg.Wait()
+	if cribblyerr.IsNotFound(err) {
+		ctx.String(http.StatusBadRequest, fmt.Sprintf(`result cannot be made for non-existent resource: %v`, err))
 		return
 	} else if err != nil {
 		ctx.String(http.StatusInternalServerError, err.Error())

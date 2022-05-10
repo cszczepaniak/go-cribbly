@@ -19,11 +19,14 @@ func TestGameResults(t *testing.T) {
 	s, pcfg := newTestServer(t)
 
 	g := model.Game{
-		ID:      random.UUID(),
-		TeamIDs: []string{random.UUID(), random.UUID()},
-		Kind:    model.PrelimGame,
+		ID: random.UUID(),
 	}
 	_, err := pcfg.GameStore.Create(g)
+	require.NoError(t, err)
+	tm := model.Team{
+		ID: random.UUID(),
+	}
+	_, err = pcfg.TeamStore.Create(tm)
 	require.NoError(t, err)
 
 	var gr model.GameResult
@@ -32,7 +35,7 @@ func TestGameResults(t *testing.T) {
 			"game_id": %q,
 			"winner": %q,
 			"loser_score": 111
-		}`, g.ID, random.UUID()))
+		}`, g.ID, tm.ID))
 		resp, err := http.DefaultClient.Post(s.URL+`/games/`+g.ID+`/result`, ``, r)
 		require.NoError(t, err)
 		defer resp.Body.Close()
@@ -51,7 +54,20 @@ func TestGameResults(t *testing.T) {
 			"game_id": %q,
 			"winner": %q,
 			"loser_score": 111
-		}`, random.UUID(), random.UUID()))
+		}`, random.UUID(), tm.ID))
+		resp, err := http.DefaultClient.Post(s.URL+`/games/`+g.ID+`/result`, ``, r)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	})
+
+	t.Run(`create for nonexistent team`, func(t *testing.T) {
+		r := strings.NewReader(fmt.Sprintf(`{
+			"game_id": %q,
+			"winner": %q,
+			"loser_score": 111
+		}`, g.ID, random.UUID()))
 		resp, err := http.DefaultClient.Post(s.URL+`/games/`+g.ID+`/result`, ``, r)
 		require.NoError(t, err)
 		defer resp.Body.Close()
@@ -75,5 +91,23 @@ func TestGameResults(t *testing.T) {
 		assert.Equal(t, gr.Winner, result.Winner)
 		assert.Equal(t, g.ID, result.GameID)
 		assert.Equal(t, 111, result.LoserScore)
+	})
+
+	t.Run(`get all`, func(t *testing.T) {
+		resp, err := http.DefaultClient.Get(s.URL + `/games/` + g.ID + `/results`)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		bs, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		assert.NotEmpty(t, bs)
+
+		var results []model.GameResult
+		require.NoError(t, json.Unmarshal(bs, &results))
+		require.Len(t, results, 1)
+		assert.Equal(t, gr.ID, results[0].ID)
+		assert.Equal(t, gr.Winner, results[0].Winner)
+		assert.Equal(t, g.ID, results[0].GameID)
+		assert.Equal(t, 111, results[0].LoserScore)
 	})
 }
