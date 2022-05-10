@@ -14,8 +14,8 @@ type Game struct {
 }
 
 type GameResult struct {
-	ID              string `json:"id,omitempty"`
-	GameID          string `json:"game_id,omitempty"`
-	Winner          string `json:"winner,omitempty"`
-	ScoreDifference int    `json:"score_diff,omitempty"`
+	ID         string `json:"id,omitempty"`
+	GameID     string `json:"game_id,omitempty"`
+	Winner     string `json:"winner,omitempty"`
+	LoserScore int    `json:"loser_score,omitempty"`
 }

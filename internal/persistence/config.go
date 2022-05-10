@@ -6,19 +6,22 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 
 	"github.com/cszczepaniak/go-cribbly/internal/persistence/bytestore"
+	"github.com/cszczepaniak/go-cribbly/internal/persistence/gameresults"
 	"github.com/cszczepaniak/go-cribbly/internal/persistence/games"
 	"github.com/cszczepaniak/go-cribbly/internal/persistence/teams"
 )
 
 type Config struct {
 	GameStore games.GameStore
+	gameresults.GameResultStore
 	TeamStore teams.TeamStore
 }
 
 func newConfig(byteStore bytestore.ByteStore) *Config {
 	return &Config{
-		GameStore: games.NewS3GameStore(byteStore),
-		TeamStore: teams.NewS3TeamStore(byteStore),
+		GameStore:       games.NewS3GameStore(byteStore),
+		GameResultStore: gameresults.NewS3GameResultStore(byteStore),
+		TeamStore:       teams.NewS3TeamStore(byteStore),
 	}
 }
 
