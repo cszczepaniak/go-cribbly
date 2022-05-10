@@ -30,6 +30,7 @@ var tmpl = template.Must(template.ParseGlob(tmplPath))
 
 type storageGenData struct {
 	Entity      string
+	EntityCamel string
 	EntityLower string
 }
 
@@ -51,7 +52,8 @@ func main() {
 	entity = strings.TrimSpace(entity)
 	data := storageGenData{
 		Entity:      entity,
-		EntityLower: untitle(entity),
+		EntityCamel: untitle(entity),
+		EntityLower: strings.ToLower(entity),
 	}
 
 	basePath := filepath.Join(outPath, snake(entity)+`s`)

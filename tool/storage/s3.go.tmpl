@@ -7,10 +7,10 @@ import (
 	"github.com/cszczepaniak/go-cribbly/internal/persistence/bytestore"
 )
 
-const {{ .EntityLower }}sPrefix = `{{ .EntityLower }}s/`
+const {{ .EntityCamel }}sPrefix = `{{ .EntityCamel }}s/`
 
-func {{ .EntityLower }}Key(id string) string {
-	return {{ .EntityLower }}sPrefix + id + `.json`
+func {{ .EntityCamel }}Key(id string) string {
+	return {{ .EntityCamel }}sPrefix + id + `.json`
 }
 
 type s3{{ .Entity }}Store struct {
@@ -26,7 +26,7 @@ func NewS3{{ .Entity }}Store(byteStore bytestore.ByteStore) *s3{{ .Entity }}Stor
 }
 
 func (s *s3{{ .Entity }}Store) Create(e model.{{ .Entity }}) (model.{{ .Entity }}, error) {
-	err := s.byteStore.PutJSON({{ .EntityLower }}Key(e.ID), e)
+	err := s.byteStore.PutJSON({{ .EntityCamel }}Key(e.ID), e)
 	if err != nil {
 		return model.{{ .Entity }}{}, err
 	}
@@ -37,7 +37,7 @@ func (s *s3{{ .Entity }}Store) Create(e model.{{ .Entity }}) (model.{{ .Entity }
 func (s *s3{{ .Entity }}Store) Get(id string) (model.{{ .Entity }}, error) {
 	var v model.{{ .Entity }}
 
-	err := s.byteStore.GetJSON({{ .EntityLower}}Key(id), &v)
+	err := s.byteStore.GetJSON({{ .EntityCamel}}Key(id), &v)
 	if err != nil {
 		return model.{{ .Entity }}{}, err
 	}
@@ -46,7 +46,7 @@ func (s *s3{{ .Entity }}Store) Get(id string) (model.{{ .Entity }}, error) {
 }
 
 func (s *s3{{ .Entity }}Store) GetAll() ([]model.{{ .Entity }}, error) {
-	keyToPayload, err := s.byteStore.GetWithPrefix({{ .EntityLower }}sPrefix)
+	keyToPayload, err := s.byteStore.GetWithPrefix({{ .EntityCamel }}sPrefix)
 	if err != nil {
 		return nil, err
 	}
