@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -53,17 +54,17 @@ func main() {
 	}
 
 	basePath := filepath.Join(outPath, snake(entity)+`s`)
-	_, err = os.Stat(basePath)
-	switch {
-	case err == nil:
-		panic(`path already exists: ` + basePath)
-	case !os.IsNotExist(err):
+
+	ok, err := exists(basePath)
+	if err != nil {
 		panic(err)
 	}
 
-	err = os.Mkdir(basePath, os.ModePerm)
-	if err != nil {
-		panic(err)
+	if !ok {
+		err = os.Mkdir(basePath, os.ModePerm)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	interfacePath := filepath.Join(basePath, snake(entity)+`s.go`)
@@ -77,9 +78,20 @@ func main() {
 	}
 
 	for p, t := range tmplMap {
-		_, err := os.Stat(p)
-		if err == nil {
-			panic(`file already exists: ` + p)
+		ok, err := exists(p)
+		if err != nil {
+			panic(err)
+		}
+
+		overwrite := true
+		if ok {
+			survey.AskOne(&survey.Confirm{
+				Message: fmt.Sprintf("%s exists. Overwrite?", p),
+			}, &overwrite, survey.Required)
+		}
+
+		if !overwrite {
+			continue
 		}
 
 		f, err := os.OpenFile(p, os.O_CREATE, os.ModePerm)
@@ -93,6 +105,16 @@ func main() {
 			panic(err)
 		}
 	}
+}
+
+func exists(p string) (bool, error) {
+	_, err := os.Stat(p)
+	if os.IsNotExist(err) {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func untitle(s string) string {
