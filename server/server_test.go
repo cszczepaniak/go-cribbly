@@ -19,7 +19,7 @@ import (
 func newTestServer(t *testing.T) *httptest.Server {
 	pcfg := persistence.NewMemoryConfig()
 	handler := handlers.NewRequestHandler(pcfg)
-	server := NewServer(handler)
+	server := NewTestServer(handler)
 
 	s := httptest.NewServer(server)
 	t.Cleanup(s.Close)

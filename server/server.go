@@ -19,7 +19,10 @@ type server struct {
 }
 
 func NewServer(handler handlers.RequestHandler) http.Handler {
-	eng := gin.Default()
+	return newServer(handler, gin.Default())
+}
+
+func newServer(handler handlers.RequestHandler, eng *gin.Engine) http.Handler {
 	eng.Use(cors.AllowAll())
 	s := &server{
 		eng:            eng,

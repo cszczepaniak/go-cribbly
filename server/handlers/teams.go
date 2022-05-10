@@ -8,6 +8,7 @@ import (
 
 	"github.com/cszczepaniak/go-cribbly/internal/cribblyerr"
 	"github.com/cszczepaniak/go-cribbly/internal/model"
+	"github.com/cszczepaniak/go-cribbly/internal/random"
 )
 
 func (h *RequestHandler) HandleGetTeam(ctx *gin.Context) {
@@ -52,6 +53,7 @@ func (h *RequestHandler) HandleCreateTeam(ctx *gin.Context) {
 		return
 	}
 
+	t.ID = random.UUID()
 	t, err = h.pcfg.TeamStore.Create(t)
 	if err != nil {
 		ctx.String(http.StatusInternalServerError, err.Error())

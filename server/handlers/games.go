@@ -8,6 +8,7 @@ import (
 
 	"github.com/cszczepaniak/go-cribbly/internal/cribblyerr"
 	"github.com/cszczepaniak/go-cribbly/internal/model"
+	"github.com/cszczepaniak/go-cribbly/internal/random"
 )
 
 func (h *RequestHandler) HandleGetGame(ctx *gin.Context) {
@@ -56,6 +57,7 @@ func (h *RequestHandler) HandleCreateGame(ctx *gin.Context) {
 		ctx.String(http.StatusBadRequest, `unknown game kind`)
 	}
 
+	g.ID = random.UUID()
 	g, err = h.pcfg.GameStore.Create(g)
 	if err != nil {
 		ctx.String(http.StatusInternalServerError, err.Error())
