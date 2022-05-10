@@ -1,0 +1,11 @@
+package {{ .EntityLower }}s
+
+import (
+	"github.com/cszczepaniak/go-cribbly/internal/model"
+)
+
+type {{ .Entity }}Store interface {
+	Create(model.{{ .Entity }}) (model.{{ .Entity }}, error)
+	Get(id string) (model.{{ .Entity }}, error)
+	GetAll() ([]model.{{ .Entity }}, error)
+}

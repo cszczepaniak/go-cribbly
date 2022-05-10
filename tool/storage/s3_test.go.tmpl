@@ -1,4 +1,4 @@
-package teams
+package {{ .EntityLower }}s
 
 import (
 	"testing"
@@ -11,39 +11,32 @@ import (
 	"github.com/cszczepaniak/go-cribbly/internal/random"
 )
 
-func randomPlayer() model.Player {
-	return model.Player{
-		FirstName: random.UUID(),
-		LastName:  random.UUID(),
-	}
-}
-
-func TestTeams(t *testing.T) {
+func Test{{ .Entity }}s(t *testing.T) {
 	byteStore := bytestore.NewMemoryByteStore()
-	teamStore := NewS3TeamStore(byteStore)
+	{{ .EntityCamel }}Store := NewS3{{ .Entity }}Store(byteStore)
 
-	e1, err := teamStore.Create(model.Team{Players: []model.Player{randomPlayer(), randomPlayer()}})
+	e1, err := {{ .EntityCamel }}Store.Create(model.{{ .Entity }}{})
 	require.NoError(t, err)
 
-	e2, err := teamStore.Create(model.Team{Players: []model.Player{randomPlayer(), randomPlayer()}})
+	e2, err := {{ .EntityCamel }}Store.Create(model.{{ .Entity }}{})
 	require.NoError(t, err)
 
-	e3, err := teamStore.Create(model.Team{Players: []model.Player{randomPlayer(), randomPlayer()}})
+	e3, err := {{ .EntityCamel }}Store.Create(model.{{ .Entity }}{})
 	require.NoError(t, err)
 
-	e, err := teamStore.Get(e1.ID)
+	e, err := {{ .EntityCamel }}Store.Get(e1.ID)
 	require.NoError(t, err)
 	assert.Equal(t, e1, e)
 
-	e, err = teamStore.Get(e2.ID)
+	e, err = {{ .EntityCamel }}Store.Get(e2.ID)
 	require.NoError(t, err)
 	assert.Equal(t, e2, e)
 
-	e, err = teamStore.Get(e3.ID)
+	e, err = {{ .EntityCamel }}Store.Get(e3.ID)
 	require.NoError(t, err)
 	assert.Equal(t, e3, e)
 
-	es, err := teamStore.GetAll()
+	es, err := {{ .EntityCamel }}Store.GetAll()
 	require.NoError(t, err)
 	assert.Contains(t, es, e1)
 	assert.Contains(t, es, e2)

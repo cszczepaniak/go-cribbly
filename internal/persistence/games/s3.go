@@ -5,7 +5,6 @@ import (
 
 	"github.com/cszczepaniak/go-cribbly/internal/model"
 	"github.com/cszczepaniak/go-cribbly/internal/persistence/bytestore"
-	"github.com/cszczepaniak/go-cribbly/internal/random"
 )
 
 const gamesPrefix = `games/`
@@ -26,36 +25,26 @@ func NewS3GameStore(byteStore bytestore.ByteStore) *s3GameStore {
 	}
 }
 
-func (s *s3GameStore) Create(teamAID string, teamBID string, kind model.GameKind) (model.Game, error) {
-	g := model.Game{
-		ID: random.UUID(),
-		TeamIDs: []string{
-			teamAID, teamBID,
-		},
-		Kind: kind,
-	}
-
-	err := s.byteStore.PutJSON(gameKey(g.ID), g)
+func (s *s3GameStore) Create(e model.Game) (model.Game, error) {
+	err := s.byteStore.PutJSON(gameKey(e.ID), e)
 	if err != nil {
 		return model.Game{}, err
 	}
 
-	return g, nil
+	return e, nil
 }
 
-// Get implements GameStore
 func (s *s3GameStore) Get(id string) (model.Game, error) {
-	var g model.Game
+	var v model.Game
 
-	err := s.byteStore.GetJSON(gameKey(id), &g)
+	err := s.byteStore.GetJSON(gameKey(id), &v)
 	if err != nil {
 		return model.Game{}, err
 	}
 
-	return g, nil
+	return v, nil
 }
 
-// GetAll implements GameStore
 func (s *s3GameStore) GetAll() ([]model.Game, error) {
 	keyToPayload, err := s.byteStore.GetWithPrefix(gamesPrefix)
 	if err != nil {

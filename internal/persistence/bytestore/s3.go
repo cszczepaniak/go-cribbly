@@ -122,7 +122,7 @@ func (c *s3ByteStore) Get(key string) ([]byte, error) {
 
 	err := c.client.DownloadWithContext(ctx, buff, key)
 	if terr, ok := err.(awserr.RequestFailure); ok && terr.StatusCode() == http.StatusNotFound {
-		return nil, cribblyerr.ErrNotFound
+		return nil, cribblyerr.ErrNotFound(key)
 	} else if err != nil {
 		return nil, err
 	}

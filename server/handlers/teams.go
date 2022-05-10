@@ -8,12 +8,13 @@ import (
 
 	"github.com/cszczepaniak/go-cribbly/internal/cribblyerr"
 	"github.com/cszczepaniak/go-cribbly/internal/model"
+	"github.com/cszczepaniak/go-cribbly/internal/random"
 )
 
 func (h *RequestHandler) HandleGetTeam(ctx *gin.Context) {
 	id := ctx.Param(`id`)
 	t, err := h.pcfg.TeamStore.Get(id)
-	if err == cribblyerr.ErrNotFound {
+	if cribblyerr.IsNotFound(err) {
 		ctx.String(http.StatusNotFound, `team not found`)
 		return
 	} else if err != nil {
@@ -52,7 +53,8 @@ func (h *RequestHandler) HandleCreateTeam(ctx *gin.Context) {
 		return
 	}
 
-	t, err = h.pcfg.TeamStore.Create(t.Players[0], t.Players[1])
+	t.ID = random.UUID()
+	t, err = h.pcfg.TeamStore.Create(t)
 	if err != nil {
 		ctx.String(http.StatusInternalServerError, err.Error())
 		return
