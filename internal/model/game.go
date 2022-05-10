@@ -17,5 +17,6 @@ type GameResult struct {
 	ID         string `json:"id,omitempty"`
 	GameID     string `json:"game_id,omitempty"`
 	Winner     string `json:"winner,omitempty"`
+	Loser      string `json:"loser,omitempty"`
 	LoserScore int    `json:"loser_score,omitempty"`
 }

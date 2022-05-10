@@ -26,7 +26,7 @@ func NewS3GameResultStore(byteStore bytestore.ByteStore) *s3GameResultStore {
 }
 
 func (s *s3GameResultStore) Create(e model.GameResult) (model.GameResult, error) {
-	err := s.byteStore.PutJSON(gameResultKey(e.ID), e)
+	err := s.byteStore.PutJSON(gameResultKey(e.GameID), e)
 	if err != nil {
 		return model.GameResult{}, err
 	}

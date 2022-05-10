@@ -11,6 +11,8 @@ func (s *server) registerRoutes() {
 		ctx.String(http.StatusOK, `pong`)
 	})
 
+	s.eng.GET(`/standings`, s.requestHandler.HandleGetStandings)
+
 	games := s.eng.Group(`/games`)
 	games.GET(``, s.requestHandler.HandleGetAllGames)
 	games.GET(`/:id`, s.requestHandler.HandleGetGame)

@@ -18,13 +18,15 @@ import (
 func TestGameResults(t *testing.T) {
 	s, pcfg := newTestServer(t)
 
+	t1, t2 := random.UUID(), random.UUID()
 	g := model.Game{
-		ID: random.UUID(),
+		ID:      random.UUID(),
+		TeamIDs: []string{t1, t2},
 	}
 	_, err := pcfg.GameStore.Create(g)
 	require.NoError(t, err)
 	tm := model.Team{
-		ID: random.UUID(),
+		ID: t1,
 	}
 	_, err = pcfg.TeamStore.Create(tm)
 	require.NoError(t, err)
@@ -34,7 +36,7 @@ func TestGameResults(t *testing.T) {
 		r := strings.NewReader(fmt.Sprintf(`{
 			"winner": %q,
 			"loser_score": 111
-		}`, tm.ID))
+		}`, t1))
 		resp, err := http.DefaultClient.Post(s.URL+`/games/`+g.ID+`/result`, ``, r)
 		require.NoError(t, err)
 		defer resp.Body.Close()
@@ -86,6 +88,7 @@ func TestGameResults(t *testing.T) {
 
 		assert.Equal(t, gr.ID, result.ID)
 		assert.Equal(t, gr.Winner, result.Winner)
+		assert.Equal(t, t2, result.Loser)
 		assert.Equal(t, g.ID, result.GameID)
 		assert.Equal(t, 111, result.LoserScore)
 	})

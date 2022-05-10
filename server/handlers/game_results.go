@@ -66,9 +66,11 @@ func (h *RequestHandler) HandleCreateGameResult(ctx *gin.Context) {
 		return
 	}
 
+	var g model.Game
 	eg := errgroup.Group{}
 	eg.Go(func() error {
-		_, err := h.pcfg.GameStore.Get(r.GameID)
+		var err error
+		g, err = h.pcfg.GameStore.Get(r.GameID)
 		return err
 	})
 	eg.Go(func() error {
@@ -86,6 +88,13 @@ func (h *RequestHandler) HandleCreateGameResult(ctx *gin.Context) {
 	}
 
 	r.ID = r.GameID
+	for _, t := range g.TeamIDs {
+		if t == r.Winner {
+			continue
+		}
+		r.Loser = t
+		break
+	}
 	r, err = h.pcfg.GameResultStore.Create(r)
 	if err != nil {
 		ctx.String(http.StatusInternalServerError, err.Error())
